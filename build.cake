@@ -1,3 +1,9 @@
+// Install System.Security.Permissions as a Cake Addin
+#addin nuget:?package=System.Security.Permissions&version=6.0.0
+
+// Install System.Security.Permissions as a Cake Tool
+#tool nuget:?package=System.Security.Permissions&version=6.0.0
+
 var target = Argument("target", "Test");
 var configuration = Argument("configuration", "Release");
 
@@ -16,7 +22,7 @@ Task("Build")
     .IsDependentOn("Clean")
     .Does(() =>
 {
-    DotNetBuild("./src/Example.sln", new DotNetBuildSettings
+    DotNetBuild("./src/Build.sln", new DotNetBuildSettings
     {
         Configuration = configuration,
     });
@@ -26,7 +32,7 @@ Task("Test")
     .IsDependentOn("Build")
     .Does(() =>
 {
-    DotNetTest("./src/Example.sln", new DotNetTestSettings
+    DotNetTest("./src/Build.sln", new DotNetTestSettings
     {
         Configuration = configuration,
         NoBuild = true,
