@@ -23,6 +23,7 @@ namespace Servidor {
         
         public Usuario(Socket enchufe) {
             this.enchufe = enchufe;
+            nombre = "";
         }
 
         public Socket GetSocket() {

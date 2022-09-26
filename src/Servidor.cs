@@ -30,8 +30,8 @@ namespace Servidor {
                 Socket cliente = escucha.Accept();  
 
 
-                string data = null;  
-                byte[] bytes = null;
+                string data = "";  
+                byte[] bytes;
   
   
             
