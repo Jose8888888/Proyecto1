@@ -1,4 +1,0 @@
-namespace Chat {
-Class Main{}
-Class Servidor{}
-}
