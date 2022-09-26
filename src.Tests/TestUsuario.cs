@@ -11,15 +11,21 @@ namespace Tests {
     [TestFixture]
     public class TestUsuario  
     {  
-        [Test]
-        public void TestGetters() {
-            IPHostEntry host = Dns.GetHostEntry("localhost");  
-            IPAddress ipAddress = host.AddressList[0];  
-            IPEndPoint localEndPoint = new IPEndPoint(ipAddress, 11000);    
-            Socket enchufe = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            Usuario usuario = new Usuario(enchufe);
-            Assert.IsTrue(usuario.GetSocket().Equals(enchufe));
 
+        private static IPHostEntry host = Dns.GetHostEntry("localhost");  
+        private static IPAddress ipAddress = host.AddressList[0];  
+        private IPEndPoint localEndPoint = new IPEndPoint(ipAddress, 11000);    
+        private static Socket enchufe = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        Usuario usuario = new Usuario(enchufe);
+
+
+        [Test]
+        public void TestGetEnchufe() {
+        Assert.IsTrue(usuario.GetSocket().Equals(enchufe));
+        }
+
+        [Test]
+        public void TestGetNombre() {
             var caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             var chars = new char[new Random().Next(20)];
             var random = new Random();
@@ -31,16 +37,18 @@ namespace Tests {
             String nombreAleatorio = new String(chars);
             usuario.setNombre(nombreAleatorio);
             Assert.IsTrue(usuario.GetNombre().Equals(nombreAleatorio));
+        }
 
-            foreach (int i in Enum.GetValues(typeof(Usuario.Estado))) {
+        [Test]
+        public void TestGetEstado() {
+                foreach (int i in Enum.GetValues(typeof(Usuario.Estado))) {
                 Usuario.Estado estado = (Usuario.Estado)i;
                 usuario.SetEstado(estado);
                 Assert.IsTrue(usuario.GetEstado() == (estado));
 
-            }
+            }        }
 
-        }
-
+        
         
     }
 }
