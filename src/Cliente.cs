@@ -6,41 +6,36 @@ using System.Text;
 
 public class Cliente  
 {  
-    public static int Main(String[] args)  
+    private static IPHostEntry host = Dns.GetHostEntry("localhost");  
+    private static IPAddress ipAddress = host.AddressList[0];  
+    IPEndPoint remoteEP = new IPEndPoint(ipAddress, 11000);  
+  
+    Socket enchufe = new Socket(ipAddress.AddressFamily,  
+                SocketType.Stream, ProtocolType.Tcp);  
+
+    public static void Main()  
     {  
-        Inicia();  
-        return 0;  
+        Cliente cliente = new Cliente();
+        cliente.Inicia();  
     }  
   
-    public static void Inicia()  
+    public void Inicia()  
     {  
         byte[] bytes = new byte[1024];  
   
         try  
         {  
 
-            IPHostEntry host = Dns.GetHostEntry("localhost");  
-            IPAddress ipAddress = host.AddressList[0];  
-            IPEndPoint remoteEP = new IPEndPoint(ipAddress, 11000);  
-  
-            Socket enchufe = new Socket(ipAddress.AddressFamily,  
-                SocketType.Stream, ProtocolType.Tcp);  
+            
   
             try  
             {  
                 enchufe.Connect(remoteEP);  
   
                 Console.WriteLine("Enchufe conectado a {0}",  
-                    enchufe.RemoteEndPoint.ToString());  
+                enchufe.RemoteEndPoint.ToString());  
   
-                byte[] mensaje = Encoding.ASCII.GetBytes("Hola ");  
-                enchufe.Send(mensaje);
-  
-                int bytesRec = enchufe.Receive(bytes);  
-                Console.WriteLine(Encoding.ASCII.GetString(bytes, 0, bytesRec));  
-  
-                enchufe.Shutdown(SocketShutdown.Both);  
-                enchufe.Close();  
+                
   
             }  
             catch (ArgumentNullException ane)  
@@ -62,4 +57,14 @@ public class Cliente
             Console.WriteLine(e.ToString());  
         }  
     }  
+
+    public void Identifica(String nombre) {
+        enchufe.Send(CadenaABytes("IDENTIFY " + nombre));
+    }
+
+    //convierte una cadena en un arreglo de bytes para mandarlo por el enchufe
+        private byte[] CadenaABytes(String cadena) {
+            return Encoding.ASCII.GetBytes(cadena);
+        }
+
 } 
