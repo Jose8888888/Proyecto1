@@ -15,30 +15,21 @@ namespace Servidor {
         ACTIVE,
         AWAY,
         BUSY
-    }
+        }
 
-        private Socket enchufe;
-        private String nombre;
+        private String nombre = "";
         private Estado estado;
+        byte[] bytes = new byte[1024];  
         
-        public Usuario(Socket enchufe) {
-            this.enchufe = enchufe;
-            nombre = "";
-        }
 
-        public Socket GetSocket() {
-            return enchufe;
-        }
 
-        public void SetSocket(Socket enchufe) {
-            this.enchufe = enchufe;
-        }
+
 
         public String GetNombre() {
             return nombre;
         }
 
-        public void setNombre(String nombre) {
+        public void SetNombre(String nombre) {
             this.nombre = nombre;
         }
 
@@ -49,5 +40,7 @@ namespace Servidor {
         public void SetEstado(Estado estado) {
             this.estado = estado;
         }
+
+
     }
 }

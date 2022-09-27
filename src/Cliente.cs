@@ -23,24 +23,24 @@ public class Cliente
             IPAddress ipAddress = host.AddressList[0];  
             IPEndPoint remoteEP = new IPEndPoint(ipAddress, 11000);  
   
-            Socket servidor = new Socket(ipAddress.AddressFamily,  
+            Socket enchufe = new Socket(ipAddress.AddressFamily,  
                 SocketType.Stream, ProtocolType.Tcp);  
   
             try  
             {  
-                servidor.Connect(remoteEP);  
+                enchufe.Connect(remoteEP);  
   
                 Console.WriteLine("Enchufe conectado a {0}",  
-                    servidor.RemoteEndPoint.ToString());  
+                    enchufe.RemoteEndPoint.ToString());  
   
                 byte[] mensaje = Encoding.ASCII.GetBytes("Hola ");  
-                servidor.Send(mensaje);
+                enchufe.Send(mensaje);
   
-                int bytesRec = servidor.Receive(bytes);  
+                int bytesRec = enchufe.Receive(bytes);  
                 Console.WriteLine(Encoding.ASCII.GetString(bytes, 0, bytesRec));  
   
-                servidor.Shutdown(SocketShutdown.Both);  
-                servidor.Close();  
+                enchufe.Shutdown(SocketShutdown.Both);  
+                enchufe.Close();  
   
             }  
             catch (ArgumentNullException ane)  
