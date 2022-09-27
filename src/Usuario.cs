@@ -19,7 +19,7 @@ namespace Servidor {
 
         private String nombre = "";
         private Estado estado;
-        byte[] bytes = new byte[1024];  
+        byte[] bytes = new byte[2048];  
         
 
 

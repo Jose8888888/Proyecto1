@@ -55,8 +55,9 @@ namespace Servidor {
         public void Escucha() {
             
             byte[] bytes;
-            bytes = new byte[1024];  
+            bytes = new byte[2048];  
             int bytesRec = cliente.Receive(bytes);  
+            Console.WriteLine(bytesRec);
             String msj = Encoding.ASCII.GetString(bytes, 0, bytesRec);
             String[] palabras = msj.Split();
             String msj1 = palabras[0];
