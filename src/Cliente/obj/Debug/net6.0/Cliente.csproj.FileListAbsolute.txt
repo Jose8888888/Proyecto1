@@ -1,0 +1,17 @@
+/home/jose/Proyecto1/src/Cliente/bin/Debug/net6.0/Cliente
+/home/jose/Proyecto1/src/Cliente/bin/Debug/net6.0/Cliente.deps.json
+/home/jose/Proyecto1/src/Cliente/bin/Debug/net6.0/Cliente.runtimeconfig.json
+/home/jose/Proyecto1/src/Cliente/bin/Debug/net6.0/Cliente.dll
+/home/jose/Proyecto1/src/Cliente/bin/Debug/net6.0/ref/Cliente.dll
+/home/jose/Proyecto1/src/Cliente/bin/Debug/net6.0/Cliente.pdb
+/home/jose/Proyecto1/src/Cliente/bin/Debug/net6.0/Newtonsoft.Json.dll
+/home/jose/Proyecto1/src/Cliente/obj/Debug/net6.0/Cliente.csproj.AssemblyReference.cache
+/home/jose/Proyecto1/src/Cliente/obj/Debug/net6.0/Cliente.GeneratedMSBuildEditorConfig.editorconfig
+/home/jose/Proyecto1/src/Cliente/obj/Debug/net6.0/Cliente.AssemblyInfoInputs.cache
+/home/jose/Proyecto1/src/Cliente/obj/Debug/net6.0/Cliente.AssemblyInfo.cs
+/home/jose/Proyecto1/src/Cliente/obj/Debug/net6.0/Cliente.csproj.CoreCompileInputs.cache
+/home/jose/Proyecto1/src/Cliente/obj/Debug/net6.0/Cliente.csproj.CopyComplete
+/home/jose/Proyecto1/src/Cliente/obj/Debug/net6.0/Cliente.dll
+/home/jose/Proyecto1/src/Cliente/obj/Debug/net6.0/ref/Cliente.dll
+/home/jose/Proyecto1/src/Cliente/obj/Debug/net6.0/Cliente.pdb
+/home/jose/Proyecto1/src/Cliente/obj/Debug/net6.0/Cliente.genruntimeconfig.cache
