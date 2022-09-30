@@ -23,10 +23,9 @@ namespace Servidor {
         public static void Main()
         {   
             Servidor servidor = new Servidor();
-        
             servidor.Inicia();    
-
-            while(true) {  
+            while(true) { 
+                servidor.ConectaCliente();
                 servidor.Escucha();
             }
         }
@@ -42,9 +41,7 @@ namespace Servidor {
                 escucha.Listen(10);  
   
                 Console.WriteLine("Esperando conexión...");  
-                cliente = escucha.Accept();  
-                usuarios.Add(usuario);
-                Console.WriteLine("Cliente recibido");  
+                
 
                 
             }  
@@ -60,10 +57,10 @@ namespace Servidor {
             
             byte[] bytes;
             bytes = new byte[2048];  
-            int bytesRec = cliente.Receive(bytes);  
+            int bytesRec = cliente.Receive(bytes); 
+                        Console.WriteLine(bytesRec); 
             String msj = Encoding.ASCII.GetString(bytes, 0, bytesRec);
             Dictionary<String, String> Json = JsonConvert.DeserializeObject<Dictionary<String, String>>(msj);
-            Console.WriteLine(Json);
 
             switch(Json["type"]) {
                 case "IDENTIFY": 
@@ -72,7 +69,7 @@ namespace Servidor {
                     break;
 
             }
-            
+            cliente.Close();
         }       
 
         //convierte una cadena en un arreglo de bytes para mandarlo por el enchufe
@@ -104,6 +101,13 @@ namespace Servidor {
                 return JsonConvert.SerializeObject(dic);
                 
             }
+        }
+
+        //espera hasta que se conecte un cliente
+        public void ConectaCliente() {
+            cliente = escucha.Accept();  
+            usuarios.Add(usuario);
+            Console.WriteLine("Cliente recibido");  
         }
     }
 }

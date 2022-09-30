@@ -11,15 +11,17 @@ namespace Cliente {
     {  
         private static IPHostEntry host = Dns.GetHostEntry("localhost");  
         private static IPAddress ipAddress = host.AddressList[0];  
-        IPEndPoint remoteEP = new IPEndPoint(ipAddress, 11000);  
+        private IPEndPoint remoteEP = new IPEndPoint(ipAddress, 11000);  
   
-        Socket enchufe = new Socket(ipAddress.AddressFamily,  
+        private static Socket enchufe = new Socket(ipAddress.AddressFamily,  
                     SocketType.Stream, ProtocolType.Tcp);  
 
         public static void Main()  
         {  
+            
             Cliente cliente = new Cliente();
             cliente.Inicia();  
+            
             Vista.Vista vista = new Vista.Vista();
             vista.PideNombre();
         }  
@@ -70,8 +72,14 @@ namespace Cliente {
             dic.Add("type", "IDENTIFY");
             dic.Add("message", nombre);
             String mensaje = JsonConvert.SerializeObject(dic);
-
-            enchufe.Send(CadenaABytes(mensaje));
+            Console.WriteLine(mensaje);
+            try {
+                enchufe.Send(CadenaABytes(mensaje));
+            } catch(SocketException se) {
+                Console.WriteLine("Ocurrió un error al conectarse con el servidor");
+                enchufe.Close();
+                Environment.Exit(0);
+            }
         }
 
         //convierte una cadena en un arreglo de bytes para mandarlo por el enchufe
