@@ -4,7 +4,7 @@ using Controlador;
   namespace Vista {
     public class Vista  
     {  
-        private Controlador.Controlador controlador = new Controlador.Controlador();
+        private Controlador.ControladorCliente controlador = new Controlador.ControladorCliente();
 
 
         //Te pide tu nombre y se lo manda al controlador
@@ -14,11 +14,9 @@ using Controlador;
             controlador.RecibeNombre(linea);
         }
 
-
-        //lee una línea de la terminal y se la manda al controlador
-        public void LeeLinea() {
-            String linea = Console.ReadLine();
-            controlador.Controla(linea);
+        //muestra un mensaje en la terminal
+        public void Mensaje(String mensaje) {
+          Console.WriteLine(mensaje);
         }
         
     }
