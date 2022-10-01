@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Newtonsoft.Json;
+using Controlador;
 
 
 namespace Servidor {
@@ -18,6 +19,7 @@ namespace Servidor {
         private Socket cliente;
         private Usuario usuario = new Usuario(); 
         private static List<Usuario> usuarios = new List<Usuario>();
+        private Controlador.ControladorVista controlador = new ControladorVista();
 
   	        
         public static void Main()
@@ -40,14 +42,14 @@ namespace Servidor {
                 escucha.Bind(localEndPoint);  
                 escucha.Listen(10);  
   
-                Console.WriteLine("Esperando conexión...");  
+                controlador.Mensaje("Esperando conexión...");  
                 
 
                 
             }  
             catch (Exception e)  
             {  
-                Console.WriteLine(e.ToString());  
+                controlador.Mensaje(e.ToString());  
             }  
   
         }   
@@ -58,8 +60,7 @@ namespace Servidor {
             byte[] bytes;
             bytes = new byte[2048];  
             int bytesRec = cliente.Receive(bytes); 
-                        Console.WriteLine(bytesRec); 
-            String msj = Encoding.ASCII.GetString(bytes, 0, bytesRec);
+            String msj = Encoding.UTF8.GetString(bytes, 0, bytesRec);
             Dictionary<String, String> Json = JsonConvert.DeserializeObject<Dictionary<String, String>>(msj);
 
             switch(Json["type"]) {
@@ -74,7 +75,7 @@ namespace Servidor {
 
         //convierte una cadena en un arreglo de bytes para mandarlo por el enchufe
         private byte[] CadenaABytes(String cadena) {
-            return Encoding.ASCII.GetBytes(cadena);
+            return Encoding.UTF8.GetBytes(cadena);
         }
 
         //le pone nombre a un usuario si es válido, si no regresa el mensaje de error
@@ -107,7 +108,7 @@ namespace Servidor {
         public void ConectaCliente() {
             cliente = escucha.Accept();  
             usuarios.Add(usuario);
-            Console.WriteLine("Cliente recibido");  
+            controlador.Mensaje("Cliente recibido");  
         }
     }
 }

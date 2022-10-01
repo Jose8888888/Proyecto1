@@ -15,16 +15,20 @@ namespace Cliente {
   
         private static Socket enchufe = new Socket(ipAddress.AddressFamily,  
                     SocketType.Stream, ProtocolType.Tcp);  
+        private Controlador.ControladorVista controlador;
 
         public static void Main()  
         {  
             
             Cliente cliente = new Cliente();
             cliente.Inicia();  
-            
-            Vista.Vista vista = new Vista.Vista();
-            vista.PideNombre();
+            cliente.controlador = new Controlador.ControladorVista(cliente);
+            cliente.controlador.PideNombre();
         }  
+
+        public Cliente() {
+            controlador = new Controlador.ControladorVista(this);
+        }
   
         public void Inicia()  
         {  
@@ -39,7 +43,7 @@ namespace Cliente {
                 {  
                     enchufe.Connect(remoteEP);  
   
-                    Console.WriteLine("Enchufe conectado a {0}",  
+                    controlador.Mensaje("Enchufe conectado a " +  
                     enchufe.RemoteEndPoint.ToString());  
   
                 
@@ -47,21 +51,21 @@ namespace Cliente {
                 }  
                 catch (ArgumentNullException ane)  
                 {  
-                    Console.WriteLine("ArgumentNullException : {0}", ane.ToString());  
+                    controlador.Mensaje("ArgumentNullException : " + ane.ToString());  
                 }  
                 catch (SocketException se)  
                 {  
-                    Console.WriteLine("SocketException : {0}", se.ToString());  
+                    controlador.Mensaje("SocketException : " + se.ToString());  
                 }  
                 catch (Exception e)  
                 {  
-                    Console.WriteLine("Unexpected exception : {0}", e.ToString());  
+                    controlador.Mensaje("Unexpected exception : " + e.ToString());  
                 }  
   
             }  
             catch (Exception e)  
             {  
-                Console.WriteLine(e.ToString());  
+                controlador.Mensaje(e.ToString());  
             }  
         }  
 
@@ -72,11 +76,10 @@ namespace Cliente {
             dic.Add("type", "IDENTIFY");
             dic.Add("message", nombre);
             String mensaje = JsonConvert.SerializeObject(dic);
-            Console.WriteLine(mensaje);
             try {
                 enchufe.Send(CadenaABytes(mensaje));
             } catch(SocketException se) {
-                Console.WriteLine("Ocurrió un error al conectarse con el servidor");
+                controlador.Mensaje("Ocurrió un error al conectarse con el servidor");
                 enchufe.Close();
                 Environment.Exit(0);
             }
@@ -84,7 +87,7 @@ namespace Cliente {
 
         //convierte una cadena en un arreglo de bytes para mandarlo por el enchufe
             private byte[] CadenaABytes(String cadena) {
-                return Encoding.ASCII.GetBytes(cadena);
+                return Encoding.UTF8.GetBytes(cadena);
             }
 
     } 
