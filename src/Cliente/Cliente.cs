@@ -11,19 +11,21 @@ namespace Cliente {
     {  
         private static IPHostEntry host = Dns.GetHostEntry("localhost");  
         private static IPAddress ipAddress = host.AddressList[0];  
-        private IPEndPoint remoteEP = new IPEndPoint(ipAddress, 11000);  
+        private IPEndPoint remoteEP = new IPEndPoint(ipAddress, 1234);  
   
         private static Socket enchufe = new Socket(ipAddress.AddressFamily,  
                     SocketType.Stream, ProtocolType.Tcp);  
         private Controlador.ControladorVista controlador;
+        private byte[] bytes = new byte[1024];  
+
 
         public static void Main()  
         {  
-            
             Cliente cliente = new Cliente();
             cliente.Inicia();  
             cliente.controlador = new Controlador.ControladorVista(cliente);
             cliente.controlador.PideNombre();
+            while(true);
         }  
 
         public Cliente() {
@@ -31,9 +33,7 @@ namespace Cliente {
         }
   
         public void Inicia()  
-        {  
-            byte[] bytes = new byte[2048];  
-  
+        {    
             try  
             {  
 
@@ -51,25 +51,29 @@ namespace Cliente {
                 }  
                 catch (ArgumentNullException ane)  
                 {  
-                    controlador.Mensaje("ArgumentNullException : " + ane.ToString());  
+                    controlador.Error("ArgumentNullException : " + ane.ToString());  
+                    Environment.Exit(0);
                 }  
                 catch (SocketException se)  
                 {  
-                    controlador.Mensaje("SocketException : " + se.ToString());  
+                    controlador.Error("SocketException : " + se.ToString()); 
+                    Environment.Exit(0); 
                 }  
                 catch (Exception e)  
                 {  
-                    controlador.Mensaje("Unexpected exception : " + e.ToString());  
+                    controlador.Error("Unexpected exception : " + e.ToString()); 
+                    Environment.Exit(0); 
                 }  
   
             }  
             catch (Exception e)  
             {  
-                controlador.Mensaje(e.ToString());  
+                controlador.Error("Ocurrió un error: " + e.ToString());  
+                Environment.Exit(0);
             }  
         }  
 
-        
+        //le pone nombre al usuario
         public void Identifica(String nombre) {
 
             Dictionary<string, string> dic = new Dictionary<string, string>();
@@ -77,18 +81,26 @@ namespace Cliente {
             dic.Add("message", nombre);
             String mensaje = JsonConvert.SerializeObject(dic);
             try {
-                enchufe.Send(CadenaABytes(mensaje));
+                enchufe.Send(Parser.CadenaABytes(mensaje));
             } catch(SocketException se) {
-                controlador.Mensaje("Ocurrió un error al conectarse con el servidor");
+                controlador.Error("Ocurrió un error al conectarse con el servidor");
+                enchufe.Close();
+                Environment.Exit(0);
+            }
+            enchufe.Receive(bytes);
+            mensaje = Parser.BytesACadena(bytes);
+            Dictionary<String, String> Json = JsonConvert.DeserializeObject<Dictionary<String, String>>(mensaje);
+            if (Json != null) {
+                if (Json["type"] == "INFO") {
+                    return;
+                } else if (Json["type"] == "WARNING"){
+                    controlador.Mensaje("Error: " + Json["message"]);
+                }
+            } else {
+                controlador.Error("Ocurrió un error con el servidor");
                 enchufe.Close();
                 Environment.Exit(0);
             }
         }
-
-        //convierte una cadena en un arreglo de bytes para mandarlo por el enchufe
-            private byte[] CadenaABytes(String cadena) {
-                return Encoding.UTF8.GetBytes(cadena);
-            }
-
     } 
 }

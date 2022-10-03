@@ -25,6 +25,11 @@ using System;
         public void PideNombre() {
           vista.PideNombre();
         }
+
+        //muestra un mensaje de error en la vista
+        public void Error(String mensaje) {
+            vista.Error(mensaje);
+        }
         
     }
   }

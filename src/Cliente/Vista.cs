@@ -23,6 +23,11 @@ using Controlador;
       public void Mensaje(String mensaje) {
         Console.WriteLine(mensaje);
       }
+
+         //muestra un mensaje de error en la terminal
+      public void Error(String mensaje) {
+        Console.Error.WriteLine(mensaje);
+      }
         
     }
   }

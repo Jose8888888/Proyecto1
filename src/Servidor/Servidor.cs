@@ -7,29 +7,26 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 using Controlador;
+using System.Threading;
 
 
 namespace Servidor {
     public class Servidor  
     {  
         private static IPHostEntry host = Dns.GetHostEntry("localhost");  
-        private static IPAddress ipAddress = host.AddressList[0];  
-        private static IPEndPoint localEndPoint = new IPEndPoint(ipAddress, 11000);    
-        private Socket escucha = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
-        private Socket cliente;
-        private Usuario usuario = new Usuario(); 
-        private static List<Usuario> usuarios = new List<Usuario>();
+        private static IPAddress ipAddress = host.AddressList[0]; 
+        private static IPEndPoint localEndPoint = new IPEndPoint(ipAddress, 1234);  
+        private Socket servidor = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
+        private static Dictionary<Socket, Usuario> usuarios = new Dictionary<Socket, Usuario>();
         private Controlador.ControladorVista controlador = new ControladorVista();
+        bool estaActivo = true;
 
   	        
         public static void Main()
         {   
             Servidor servidor = new Servidor();
             servidor.Inicia();    
-            while(true) { 
-                servidor.ConectaCliente();
-                servidor.Escucha();
-            }
+            
         }
 
         public void Inicia()  
@@ -38,9 +35,9 @@ namespace Servidor {
       
             try {   
   
-                escucha = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);  
-                escucha.Bind(localEndPoint);  
-                escucha.Listen(10);  
+                servidor = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);  
+                servidor.Bind(localEndPoint);  
+                servidor.Listen(10);  
   
                 controlador.Mensaje("Esperando conexión...");  
                 
@@ -49,45 +46,49 @@ namespace Servidor {
             }  
             catch (Exception e)  
             {  
-                controlador.Mensaje(e.ToString());  
+                controlador.Error("Ocurrió un error: " + e.ToString());  
             }  
-  
+
+            ConectaCliente();
+
         }   
         
-        //escucha al cliente y hace lo que le pide
-        public void Escucha() {
+        //recibe información del cliente
+        public void Escucha(Socket cliente) {
             
-            byte[] bytes;
-            bytes = new byte[2048];  
-            int bytesRec = cliente.Receive(bytes); 
-            String msj = Encoding.UTF8.GetString(bytes, 0, bytesRec);
-            Dictionary<String, String> Json = JsonConvert.DeserializeObject<Dictionary<String, String>>(msj);
+            while(estaActivo) {
+                byte[] bytes;
+                bytes = new byte[1024];  
+                cliente.Receive(bytes); 
+                String msj = Parser.BytesACadena(bytes);
+                Dictionary<String, String> Json = JsonConvert.DeserializeObject<Dictionary<String, String>>(msj);
+                if (Json != null) {
+                    switch(Json["type"]) {
+                        case "IDENTIFY": 
+                            String mensaje = IdentificaUsuario(Json["message"], usuarios[cliente]);
+                            cliente.Send(Parser.CadenaABytes(mensaje));                   
+                            break;
 
-            switch(Json["type"]) {
-                case "IDENTIFY": 
-                    String mensaje = IdentificaUsuario(Json["message"]);
-                    cliente.Receive(CadenaABytes(mensaje));                   
-                    break;
-
+                    }
+                } else {
+                    controlador.Error("Ocurrió un error con el cliente");
+                    Desconecta(cliente);
+                }
             }
-            cliente.Close();
         }       
 
-        //convierte una cadena en un arreglo de bytes para mandarlo por el enchufe
-        private byte[] CadenaABytes(String cadena) {
-            return Encoding.UTF8.GetBytes(cadena);
-        }
+        
 
         //le pone nombre a un usuario si es válido, si no regresa el mensaje de error
-        private String IdentificaUsuario(String nombre) {
-            if(!usuario.GetNombre().Equals("")) {
+        private String IdentificaUsuario(String nombre, Usuario cliente) {
+            if(!cliente.GetNombre().Equals("")) {
                 Dictionary<string, string> dic = new Dictionary<string, string>();
                 dic.Add("type", "WARNING");
                 dic.Add("message", "El usuario ya está identificado");
 
                 return JsonConvert.SerializeObject(dic);
             } else {
-                foreach(Usuario usuario in usuarios) {
+                foreach(Usuario usuario in usuarios.Values) {
                     if(nombre.Equals(usuario.GetNombre())) {
                         Dictionary<string, string> dic2 = new Dictionary<string, string>();
                         dic2.Add("type", "WARNING");
@@ -95,7 +96,7 @@ namespace Servidor {
                         return JsonConvert.SerializeObject(dic2);
                     }
                 }
-                usuario.SetNombre(nombre);
+                cliente.SetNombre(nombre);
                 Dictionary<string, string> dic = new Dictionary<string, string>();
                 dic.Add("type", "INFO");
                 dic.Add("message", "success");
@@ -106,9 +107,25 @@ namespace Servidor {
 
         //espera hasta que se conecte un cliente
         public void ConectaCliente() {
-            cliente = escucha.Accept();  
-            usuarios.Add(usuario);
+            Socket cliente;
+            try {
+                cliente = servidor.Accept();  
+            } catch(SocketException se) {
+                controlador.Error("Ocurrió un error con el cliente");
+                ConectaCliente();
+                return;
+            }
+            usuarios.Add(cliente, new Usuario());
             controlador.Mensaje("Cliente recibido");  
+            Thread hilo = new Thread(ConectaCliente);
+            hilo.Start();
+            Escucha(cliente);
         }
+
+        //desconecta al cliente
+        private void Desconecta(Socket cliente) {
+            cliente.Close();
+            estaActivo = false;
+         }
     }
 }
