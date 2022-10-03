@@ -19,7 +19,6 @@ namespace Servidor {
         private Socket servidor = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
         private static Dictionary<Socket, Usuario> usuarios = new Dictionary<Socket, Usuario>();
         private Controlador.ControladorVista controlador = new ControladorVista();
-        bool estaActivo = true;
 
   	        
         public static void Main()
@@ -55,24 +54,28 @@ namespace Servidor {
         
         //recibe información del cliente
         public void Escucha(Socket cliente) {
-            
+            bool estaActivo = true;
+
             while(estaActivo) {
                 byte[] bytes;
                 bytes = new byte[1024];  
                 cliente.Receive(bytes); 
+                
                 String msj = Parser.BytesACadena(bytes);
                 Dictionary<String, String> Json = JsonConvert.DeserializeObject<Dictionary<String, String>>(msj);
                 if (Json != null) {
                     switch(Json["type"]) {
                         case "IDENTIFY": 
                             String mensaje = IdentificaUsuario(Json["message"], usuarios[cliente]);
-                            cliente.Send(Parser.CadenaABytes(mensaje));                   
+                            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);                   
+                            
                             break;
 
                     }
                 } else {
                     controlador.Error("Ocurrió un error con el cliente");
-                    Desconecta(cliente);
+                    cliente.Close();
+                    estaActivo = false;
                 }
             }
         }       
@@ -82,25 +85,25 @@ namespace Servidor {
         //le pone nombre a un usuario si es válido, si no regresa el mensaje de error
         private String IdentificaUsuario(String nombre, Usuario cliente) {
             if(!cliente.GetNombre().Equals("")) {
-                Dictionary<string, string> dic = new Dictionary<string, string>();
-                dic.Add("type", "WARNING");
-                dic.Add("message", "El usuario ya está identificado");
+                Dictionary<string, string> json = new Dictionary<string, string>();
+                json.Add("type", "WARNING");
+                json.Add("message", "El usuario ya está identificado");
 
-                return JsonConvert.SerializeObject(dic);
+                return JsonConvert.SerializeObject(json);
             } else {
                 foreach(Usuario usuario in usuarios.Values) {
                     if(nombre.Equals(usuario.GetNombre())) {
-                        Dictionary<string, string> dic2 = new Dictionary<string, string>();
-                        dic2.Add("type", "WARNING");
-                        dic2.Add("message", "El identificador ya está siendo utilizado por otro usuario");
-                        return JsonConvert.SerializeObject(dic2);
+                        Dictionary<string, string> json2 = new Dictionary<string, string>();
+                        json2.Add("type", "WARNING");
+                        json2.Add("message", "El usuario '" + nombre + "' ya existe");
+                        return JsonConvert.SerializeObject(json2);
                     }
                 }
                 cliente.SetNombre(nombre);
-                Dictionary<string, string> dic = new Dictionary<string, string>();
-                dic.Add("type", "INFO");
-                dic.Add("message", "success");
-                return JsonConvert.SerializeObject(dic);
+                Dictionary<string, string> json = new Dictionary<string, string>();
+                json.Add("type", "INFO");
+                json.Add("message", "success");
+                return JsonConvert.SerializeObject(json);
                 
             }
         }
@@ -122,10 +125,6 @@ namespace Servidor {
             Escucha(cliente);
         }
 
-        //desconecta al cliente
-        private void Desconecta(Socket cliente) {
-            cliente.Close();
-            estaActivo = false;
-         }
+
     }
 }

@@ -83,18 +83,20 @@ namespace Cliente {
             try {
                 enchufe.Send(Parser.CadenaABytes(mensaje));
             } catch(SocketException se) {
-                controlador.Error("Ocurrió un error al conectarse con el servidor");
+                controlador.Error("Ocurrió un error al conectarse con el servidor " + se);
                 enchufe.Close();
                 Environment.Exit(0);
             }
-            enchufe.Receive(bytes);
+            enchufe.Receive(bytes, 1024, 0);
             mensaje = Parser.BytesACadena(bytes);
             Dictionary<String, String> Json = JsonConvert.DeserializeObject<Dictionary<String, String>>(mensaje);
             if (Json != null) {
                 if (Json["type"] == "INFO") {
+                    controlador.Mensaje("Nombre aceptado");
                     return;
                 } else if (Json["type"] == "WARNING"){
                     controlador.Mensaje("Error: " + Json["message"]);
+                    controlador.PideNombre();
                 }
             } else {
                 controlador.Error("Ocurrió un error con el servidor");
