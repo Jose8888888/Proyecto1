@@ -30,7 +30,7 @@ namespace Chat {
             hilo.Start();
             while(true) {
                 cliente.AnalizaMensaje(cliente.controlador.Escucha());
-            };
+            }
         }  
 
         public Cliente() {
@@ -151,16 +151,15 @@ namespace Chat {
 
         //escucha los mensajes del servidor
         private void Escucha() {
-            bool estaActivo = true;
 
-            while(estaActivo) {
+            while(true) {
                 Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Recibe());
                 if (json != null) {
                     AnalizaJson(json);
                 } else {
                     controlador.Error("Ocurrió un error con el servidor");
                     enchufe.Close();
-                    estaActivo = false;
+                    Environment.Exit(0);
                 }
             }
         }
@@ -174,6 +173,9 @@ namespace Chat {
                             break;
                         case "WARNING":
                             controlador.Mensaje(json["message"]);
+                            break;
+                        case "NEW_USER":
+                            controlador.Mensaje(json["username"] + " ha entrado al chat.");
                             break;
                     }
         }

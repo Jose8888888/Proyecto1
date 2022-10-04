@@ -159,7 +159,7 @@ namespace Chat {
                         case "IDENTIFY": 
                             String mensaje = IdentificaUsuario(json["message"], usuarios[cliente]);
                             Envia(cliente, Parser.CadenaABytes(mensaje));  
-                                                                         
+                            AvisaNuevoUsuario(usuarios[cliente]);                                                   
                             break;
                         
                         case "MESSAGE":
@@ -183,6 +183,19 @@ namespace Chat {
                             }
                             break;
                     }
+        }
+
+        //avisa de un nuevo usuario a los demás usuarios
+        private void AvisaNuevoUsuario(Usuario nuevoUsuario) {
+            Dictionary<string, string> json = new Dictionary<string, string>();
+            json.Add("type", "NEW_USER");
+            json.Add("username", nuevoUsuario.GetNombre());
+            String mensaje = JsonConvert.SerializeObject(json);
+            foreach(Usuario usuario in usuarios.Values) {
+                if (usuario != nuevoUsuario) {
+                    Envia(enchufes[usuario], Parser.CadenaABytes(mensaje));
+                }
+            }
         }
     }
 }
