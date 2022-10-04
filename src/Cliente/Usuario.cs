@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Sockets;  
 using System.Text;  
 
-namespace Servidor {
+namespace Chat {
 
     
 
@@ -40,7 +40,6 @@ namespace Servidor {
         public void SetEstado(Estado estado) {
             this.estado = estado;
         }
-
 
     }
 }

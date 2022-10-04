@@ -1,10 +1,9 @@
 using System;  
-using Controlador;
   
-  namespace Vista {
+  namespace Chat {
     public class Vista  
     {  
-      private Controlador.ControladorCliente controlador;
+      private ControladorCliente controlador;
 
 
       public Vista() {}
@@ -29,5 +28,9 @@ using Controlador;
         Console.Error.WriteLine(mensaje);
       }
         
+        //espera a que el usuario escriba algo en la terminal
+        public String Escucha() {
+            return Console.ReadLine();
+        }
     }
   }

@@ -1,19 +1,19 @@
 using System;  
   
-  namespace Controlador {
+  namespace Chat {
 
     //clase que conecta al cliente y al servidor con la vista
     public  class ControladorVista  
     {  
-        private Vista.Vista vista;
+        private Vista vista;
         private ControladorCliente controlador;
 
         public ControladorVista() {
-          vista = new Vista.Vista();
+          vista = new Vista();
         }
-        public ControladorVista(Cliente.Cliente cliente) {
+        public ControladorVista(Cliente cliente) {
           controlador = new ControladorCliente(cliente);
-          vista = new Vista.Vista(controlador);
+          vista = new Vista(controlador);
         }
 
         //muestra un mensaje en la vista
@@ -29,6 +29,11 @@ using System;
         //muestra un mensaje de error en la vista
         public void Error(String mensaje) {
             vista.Error(mensaje);
+        }
+
+        //espera a que el usuario escriba algo en la terminal
+        public String Escucha() {
+          return vista.Escucha();
         }
         
     }

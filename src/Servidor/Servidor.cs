@@ -6,11 +6,10 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Newtonsoft.Json;
-using Controlador;
 using System.Threading;
 
 
-namespace Servidor {
+namespace Chat {
     public class Servidor  
     {  
         private static IPHostEntry host = Dns.GetHostEntry("localhost");  
@@ -18,7 +17,9 @@ namespace Servidor {
         private static IPEndPoint localEndPoint = new IPEndPoint(ipAddress, 1234);  
         private Socket servidor = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
         private static Dictionary<Socket, Usuario> usuarios = new Dictionary<Socket, Usuario>();
-        private Controlador.ControladorVista controlador = new ControladorVista();
+        private static Dictionary<Usuario, Socket> enchufes = new Dictionary<Usuario, Socket>();
+
+        private ControladorVista controlador = new ControladorVista();
 
   	        
         public static void Main()
@@ -57,20 +58,35 @@ namespace Servidor {
             bool estaActivo = true;
 
             while(estaActivo) {
-                byte[] bytes;
-                bytes = new byte[1024];  
-                cliente.Receive(bytes); 
-                
-                String msj = Parser.BytesACadena(bytes);
-                Dictionary<String, String> Json = JsonConvert.DeserializeObject<Dictionary<String, String>>(msj);
+                Dictionary<String, String> Json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Recibe(cliente));
                 if (Json != null) {
                     switch(Json["type"]) {
                         case "IDENTIFY": 
                             String mensaje = IdentificaUsuario(Json["message"], usuarios[cliente]);
-                            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);                   
-                            
+                            Envia(cliente, Parser.CadenaABytes(mensaje));  
+                                                                         
                             break;
-
+                        
+                        case "MESSAGE":
+                            Usuario usuario = null;
+                            foreach (Usuario u in usuarios.Values) {
+                                if (u.GetNombre() == Json["username"]) {
+                                    usuario = u;
+                                    break;
+                                }
+                                
+                            }
+                            if (usuario != null) {
+                                EnviaMensaje(usuario, Json["message"], usuarios[cliente]);
+                                
+                            } else {
+                                Dictionary<string, string> json = new Dictionary<string, string>();
+                                json.Add("type", "WARNING");
+                                json.Add("message", "El usuario '" + Json["nombre"] + "' no existe");
+                                mensaje = JsonConvert.SerializeObject(json);
+                                    Envia(cliente, Parser.CadenaABytes(mensaje));
+                            }
+                            break;
                     }
                 } else {
                     controlador.Error("Ocurrió un error con el cliente");
@@ -118,13 +134,50 @@ namespace Servidor {
                 ConectaCliente();
                 return;
             }
-            usuarios.Add(cliente, new Usuario());
+            Usuario usuario = new Usuario();
+            usuarios.Add(cliente, usuario);
+            enchufes.Add(usuario, cliente);
             controlador.Mensaje("Cliente recibido");  
             Thread hilo = new Thread(ConectaCliente);
             hilo.Start();
             Escucha(cliente);
         }
 
+        //envía un mensaje privado a un usuario
+        private void EnviaMensaje(Usuario destinatario, String mensaje, Usuario emisor) {
+            Dictionary<string,string> json = new Dictionary<string, string>();
+            json.Add("type", "MESSAGE_FROM");
+            json.Add("username", emisor.GetNombre());
+            json.Add("message", mensaje);
+            String mensajeJson = JsonConvert.SerializeObject(json);
+            Envia(enchufes[destinatario], Parser.CadenaABytes(mensajeJson));
+            
+        }
 
+        //envía un mensaje al cliente por el enchufe
+        private void Envia(Socket cliente, byte[] mensaje) {
+            try {
+                lock(cliente)
+                    cliente.Send(mensaje, 1024, 0);
+            } catch(SocketException se) {
+                controlador.Error("Ocurrió un error al conectarse con el cliente " + se);
+                cliente.Close();
+                Environment.Exit(0);
+            }
+        }
+
+        //recibe un mensaje del enchufe del cliente
+        private String Recibe(Socket cliente) {
+            byte[] bytes = new byte[1024];
+            try {
+                cliente.Receive(bytes, 1024, 0);
+            } catch(SocketException se) {
+                controlador.Error("Ocurrió un error al conectarse con el servidor " + se);
+                cliente.Close();
+                Environment.Exit(0);
+            }
+
+            return Parser.BytesACadena(bytes);
+        }
     }
 }

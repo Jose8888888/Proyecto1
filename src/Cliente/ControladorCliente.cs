@@ -1,16 +1,15 @@
 
 using System;  
-using Cliente;
   
-  namespace Controlador {
+  namespace Chat {
 
     //clase que conecta a la vista con el cliente
     public class ControladorCliente
     {  
-        private Cliente.Cliente cliente;
+        private Cliente cliente;
 
 
-        public ControladorCliente(Cliente.Cliente cliente) {
+        public ControladorCliente(Cliente cliente) {
           this.cliente = cliente;
         }
 

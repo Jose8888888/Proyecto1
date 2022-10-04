@@ -6,7 +6,7 @@ using System.Text.Json;
 using Newtonsoft.Json;
 
   
-namespace Cliente {
+namespace Chat {
     public class Cliente  
     {  
         private static IPHostEntry host = Dns.GetHostEntry("localhost");  
@@ -15,21 +15,23 @@ namespace Cliente {
   
         private static Socket enchufe = new Socket(ipAddress.AddressFamily,  
                     SocketType.Stream, ProtocolType.Tcp);  
-        private Controlador.ControladorVista controlador;
-        private byte[] bytes = new byte[1024];  
+        private ControladorVista controlador;
+        private List<Usuario> usuarios = new List<Usuario>();
 
 
         public static void Main()  
         {  
             Cliente cliente = new Cliente();
             cliente.Inicia();  
-            cliente.controlador = new Controlador.ControladorVista(cliente);
+            cliente.controlador = new ControladorVista(cliente);
             cliente.controlador.PideNombre();
-            while(true);
+            while(true) {
+                cliente.AnalizaMensaje(cliente.controlador.Escucha());
+            };
         }  
 
         public Cliente() {
-            controlador = new Controlador.ControladorVista(this);
+            controlador = new ControladorVista(this);
         }
   
         public void Inicia()  
@@ -76,20 +78,12 @@ namespace Cliente {
         //le pone nombre al usuario
         public void Identifica(String nombre) {
 
-            Dictionary<string, string> dic = new Dictionary<string, string>();
-            dic.Add("type", "IDENTIFY");
-            dic.Add("message", nombre);
-            String mensaje = JsonConvert.SerializeObject(dic);
-            try {
-                enchufe.Send(Parser.CadenaABytes(mensaje));
-            } catch(SocketException se) {
-                controlador.Error("Ocurrió un error al conectarse con el servidor " + se);
-                enchufe.Close();
-                Environment.Exit(0);
-            }
-            enchufe.Receive(bytes, 1024, 0);
-            mensaje = Parser.BytesACadena(bytes);
-            Dictionary<String, String> Json = JsonConvert.DeserializeObject<Dictionary<String, String>>(mensaje);
+            Dictionary<string, string> json = new Dictionary<string, string>();
+            json.Add("type", "IDENTIFY");
+            json.Add("message", nombre);
+            String mensaje = JsonConvert.SerializeObject(json);
+            Envia(Parser.CadenaABytes(mensaje));
+            Dictionary<String, String> Json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Recibe());
             if (Json != null) {
                 if (Json["type"] == "INFO") {
                     controlador.Mensaje("Nombre aceptado");
@@ -103,6 +97,60 @@ namespace Cliente {
                 enchufe.Close();
                 Environment.Exit(0);
             }
+        }
+
+        //revisa si un mensaje es público, privado, etc.
+        private void AnalizaMensaje(String mensaje) {
+            String[] separados = mensaje.Split(": ", 2);
+            foreach(Usuario usuario in usuarios) {
+                if (usuario.GetNombre() == separados[0]) {
+
+                    EnviaMensaje(separados[0], separados[1]);
+                    return;
+                }
+            }
+            controlador.Error("El usuario '" + separados[0] + "' no existe");
+        }
+
+        //envía un mensaje privado
+        private void EnviaMensaje(String destinatario, String mensaje) {
+            Dictionary<string, string> json = new Dictionary<string, string>();
+            json.Add("type", "MESSAGE");
+            json.Add("username", destinatario);
+            json.Add("message", mensaje);
+            String mensajeJson = JsonConvert.SerializeObject(json);
+            try {
+                Envia(Parser.CadenaABytes(mensajeJson));
+            } catch(SocketException se) {
+                controlador.Error("Ocurrió un error al conectarse con el servidor " + se);
+                enchufe.Close();
+                Environment.Exit(0);
+            }
+        }
+
+        //envía un mensaje al servidor por el enchufe
+        private void Envia(byte[] mensaje) {
+            try {
+                enchufe.Send(mensaje, 1024, 0);
+            } catch(SocketException se) {
+                controlador.Error("Ocurrió un error al conectarse con el servidor " + se);
+                enchufe.Close();
+                Environment.Exit(0);
+            }
+        }
+
+        //recibe un mensaje del enchufe del servidor
+        private String Recibe() {
+            byte[] bytes = new byte[1024];
+            try {
+                enchufe.Receive(bytes, 1024, 0);
+            } catch(SocketException se) {
+                controlador.Error("Ocurrió un error al conectarse con el servidor " + se);
+                enchufe.Close();
+                Environment.Exit(0);
+            }
+
+            return Parser.BytesACadena(bytes);
         }
     } 
 }
