@@ -58,36 +58,9 @@ namespace Chat {
             bool estaActivo = true;
 
             while(estaActivo) {
-                Dictionary<String, String> Json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Recibe(cliente));
-                if (Json != null) {
-                    switch(Json["type"]) {
-                        case "IDENTIFY": 
-                            String mensaje = IdentificaUsuario(Json["message"], usuarios[cliente]);
-                            Envia(cliente, Parser.CadenaABytes(mensaje));  
-                                                                         
-                            break;
-                        
-                        case "MESSAGE":
-                            Usuario usuario = null;
-                            foreach (Usuario u in usuarios.Values) {
-                                if (u.GetNombre() == Json["username"]) {
-                                    usuario = u;
-                                    break;
-                                }
-                                
-                            }
-                            if (usuario != null) {
-                                EnviaMensaje(usuario, Json["message"], usuarios[cliente]);
-                                
-                            } else {
-                                Dictionary<string, string> json = new Dictionary<string, string>();
-                                json.Add("type", "WARNING");
-                                json.Add("message", "El usuario '" + Json["nombre"] + "' no existe");
-                                mensaje = JsonConvert.SerializeObject(json);
-                                    Envia(cliente, Parser.CadenaABytes(mensaje));
-                            }
-                            break;
-                    }
+                Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Recibe(cliente));
+                if (json != null) {
+                    AnalizaJson(json, cliente);
                 } else {
                     controlador.Error("Ocurrió un error con el cliente");
                     cliente.Close();
@@ -125,7 +98,7 @@ namespace Chat {
         }
 
         //espera hasta que se conecte un cliente
-        public void ConectaCliente() {
+        private void ConectaCliente() {
             Socket cliente;
             try {
                 cliente = servidor.Accept();  
@@ -178,6 +151,38 @@ namespace Chat {
             }
 
             return Parser.BytesACadena(bytes);
+        }
+
+        //analiza un mensaje Json
+        private void AnalizaJson(Dictionary<string, string> json, Socket cliente) {
+            switch(json["type"]) {
+                        case "IDENTIFY": 
+                            String mensaje = IdentificaUsuario(json["message"], usuarios[cliente]);
+                            Envia(cliente, Parser.CadenaABytes(mensaje));  
+                                                                         
+                            break;
+                        
+                        case "MESSAGE":
+                            Usuario usuario = null;
+                            foreach (Usuario u in usuarios.Values) {
+                                if (u.GetNombre() == json["username"]) {
+                                    usuario = u;
+                                    break;
+                                }
+                                
+                            }
+                            if (usuario != null) {
+                                EnviaMensaje(usuario, json["message"], usuarios[cliente]);
+                                
+                            } else {
+                                Dictionary<string, string> json2 = new Dictionary<string, string>();
+                                json2.Add("type", "WARNING");
+                                json2.Add("message", "El usuario '" + json["username"] + "' no existe");
+                                mensaje = JsonConvert.SerializeObject(json2);
+                                Envia(cliente, Parser.CadenaABytes(mensaje));
+                            }
+                            break;
+                    }
         }
     }
 }

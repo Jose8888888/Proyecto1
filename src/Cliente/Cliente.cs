@@ -4,6 +4,8 @@ using System.Net.Sockets;
 using System.Text;  
 using System.Text.Json;
 using Newtonsoft.Json;
+using System.Threading;
+
 
   
 namespace Chat {
@@ -16,7 +18,6 @@ namespace Chat {
         private static Socket enchufe = new Socket(ipAddress.AddressFamily,  
                     SocketType.Stream, ProtocolType.Tcp);  
         private ControladorVista controlador;
-        private List<Usuario> usuarios = new List<Usuario>();
 
 
         public static void Main()  
@@ -25,6 +26,8 @@ namespace Chat {
             cliente.Inicia();  
             cliente.controlador = new ControladorVista(cliente);
             cliente.controlador.PideNombre();
+            Thread hilo = new Thread(cliente.Escucha);
+            hilo.Start();
             while(true) {
                 cliente.AnalizaMensaje(cliente.controlador.Escucha());
             };
@@ -102,14 +105,12 @@ namespace Chat {
         //revisa si un mensaje es público, privado, etc.
         private void AnalizaMensaje(String mensaje) {
             String[] separados = mensaje.Split(": ", 2);
-            foreach(Usuario usuario in usuarios) {
-                if (usuario.GetNombre() == separados[0]) {
-
-                    EnviaMensaje(separados[0], separados[1]);
-                    return;
-                }
+            if (separados.Length == 2) {
+                EnviaMensaje(separados[0], separados[1]);
+                return;
             }
-            controlador.Error("El usuario '" + separados[0] + "' no existe");
+                
+            
         }
 
         //envía un mensaje privado
@@ -119,13 +120,8 @@ namespace Chat {
             json.Add("username", destinatario);
             json.Add("message", mensaje);
             String mensajeJson = JsonConvert.SerializeObject(json);
-            try {
-                Envia(Parser.CadenaABytes(mensajeJson));
-            } catch(SocketException se) {
-                controlador.Error("Ocurrió un error al conectarse con el servidor " + se);
-                enchufe.Close();
-                Environment.Exit(0);
-            }
+            Envia(Parser.CadenaABytes(mensajeJson));
+
         }
 
         //envía un mensaje al servidor por el enchufe
@@ -151,6 +147,35 @@ namespace Chat {
             }
 
             return Parser.BytesACadena(bytes);
+        }
+
+        //escucha los mensajes del servidor
+        private void Escucha() {
+            bool estaActivo = true;
+
+            while(estaActivo) {
+                Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Recibe());
+                if (json != null) {
+                    AnalizaJson(json);
+                } else {
+                    controlador.Error("Ocurrió un error con el servidor");
+                    enchufe.Close();
+                    estaActivo = false;
+                }
+            }
+        }
+
+        //analiza un mensaje Json
+        private void AnalizaJson(Dictionary<string, string> json) {
+            switch(json["type"]) {
+                        case "MESSAGE_FROM": 
+                            String mensaje = json["username"] + ": " + json["message"];
+                            controlador.Mensaje(mensaje);
+                            break;
+                        case "WARNING":
+                            controlador.Mensaje(json["message"]);
+                            break;
+                    }
         }
     } 
 }
