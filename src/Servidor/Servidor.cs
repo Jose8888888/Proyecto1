@@ -132,8 +132,8 @@ namespace Chat {
             try {
                 lock(cliente)
                     cliente.Send(mensaje, 1024, 0);
-            } catch(SocketException se) {
-                controlador.Error("Ocurrió un error al conectarse con el cliente " + se);
+            } catch(Exception) {
+                controlador.Error("Ocurrió un error al conectarse con el cliente");
                 cliente.Close();
                 Environment.Exit(0);
             }
@@ -182,6 +182,22 @@ namespace Chat {
                                 Envia(cliente, Parser.CadenaABytes(mensaje));
                             }
                             break;
+                        
+                        case "STATUS":
+                            Usuario.Estado estado = (Usuario.Estado) Enum.Parse(typeof(Usuario.Estado), json["status"]);
+                            
+                            mensaje = CambiaEstado(usuarios[cliente], estado);
+                            Envia(cliente, Parser.CadenaABytes(mensaje));
+                            AvisaNuevoEstado(usuarios[cliente], json["status"]);
+                            break;
+                        
+                        case "USERS":
+                            Dictionary<string, string> json3 = new Dictionary<string, string>();
+                            json3.Add("type", "USER_LIST");
+                            json3.Add("usernames", JsonConvert.SerializeObject(usuarios.Values));
+                            mensaje = JsonConvert.SerializeObject(json3);
+                            Envia(cliente, Parser.CadenaABytes(mensaje));
+                            break;
                     }
         }
 
@@ -194,6 +210,35 @@ namespace Chat {
             foreach(Usuario usuario in usuarios.Values) {
                 if (usuario != nuevoUsuario) {
                     Envia(enchufes[usuario], Parser.CadenaABytes(mensaje));
+                }
+            }
+        }
+
+        //cambia el estado de un usuario, si ya tenía ese estado regresa un error
+        private String CambiaEstado(Usuario usuario, Usuario.Estado estado) {
+            Dictionary<string, string> json = new Dictionary<string, string>();
+            if (usuario.GetEstado() != estado) {
+                usuario.SetEstado(estado);
+                json.Add("type", "INFO");
+                json.Add("message", "success");
+                return JsonConvert.SerializeObject(json);
+            } else {
+                json.Add("type", "WARNING");
+                json.Add("message", "El estado ya es " + estado);
+                return JsonConvert.SerializeObject(json);
+            }
+        }
+
+        //avisa a los demás usuarios que un usuario cambió de estado
+        private void AvisaNuevoEstado(Usuario usuario, String estado) {
+            Dictionary<string, string> json = new Dictionary<string, string>();
+            json.Add("type", "NEW_STATUS");
+            json.Add("username", usuario.GetNombre());
+            json.Add("status", estado);
+            String mensaje = JsonConvert.SerializeObject(json);
+            foreach(Usuario u in usuarios.Values) {
+                if (u != usuario) {
+                    Envia(enchufes[u], Parser.CadenaABytes(mensaje));
                 }
             }
         }
