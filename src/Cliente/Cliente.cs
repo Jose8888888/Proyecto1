@@ -204,7 +204,7 @@ namespace Chat {
         private void AnalizaJson(Dictionary<string, string> json) {
             switch(json["type"]) {
                         case "MESSAGE_FROM": 
-                            String mensaje = json["username"] + ": " + json["message"];
+                            String mensaje = "(" + json["username"] + "): " + json["message"];
                             controlador.Mensaje(mensaje);
                             break;
                         case "NEW_USER":
