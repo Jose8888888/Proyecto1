@@ -194,7 +194,7 @@ namespace Chat {
                         case "USERS":
                             Dictionary<string, string> json3 = new Dictionary<string, string>();
                             json3.Add("type", "USER_LIST");
-                            json3.Add("usernames", JsonConvert.SerializeObject(usuarios.Values));
+                            json3.Add("usernames", Nombres());
                             mensaje = JsonConvert.SerializeObject(json3);
                             Envia(cliente, Parser.CadenaABytes(mensaje));
                             break;
@@ -241,6 +241,15 @@ namespace Chat {
                     Envia(enchufes[u], Parser.CadenaABytes(mensaje));
                 }
             }
+        }
+
+        //regresa una lista Json de los nombres de los usuarios
+        private String Nombres() {
+            List<string> nombres = new List<string>();
+            foreach (Usuario usuario in usuarios.Values) {
+                nombres.Add(usuario.GetNombre());
+            }
+            return JsonConvert.SerializeObject(nombres);
         }
     }
 }
