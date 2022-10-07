@@ -92,6 +92,7 @@ namespace Chat {
                 Dictionary<string, string> json = new Dictionary<string, string>();
                 json.Add("type", "INFO");
                 json.Add("message", "success");
+                AvisaNuevoUsuario(usuarios[enchufes[cliente]]);                                                   
                 return JsonConvert.SerializeObject(json);
                 
             }
@@ -127,6 +128,20 @@ namespace Chat {
             
         }
 
+        //envía un mensaje público
+        private void EnviaMensaje(String mensaje, Usuario emisor) {
+            Dictionary<string,string> json = new Dictionary<string, string>();
+            json.Add("type", "PUBLIC_MESSAGE_FROM");
+            json.Add("username", emisor.GetNombre());
+            json.Add("message", mensaje);
+            String mensajeJson = JsonConvert.SerializeObject(json);
+            foreach (Usuario usuario in usuarios.Values) {
+                if (usuario != emisor) {
+                    Envia(enchufes[usuario], Parser.CadenaABytes(mensajeJson));
+                }
+            }
+        }
+
         //envía un mensaje al cliente por el enchufe
         private void Envia(Socket cliente, byte[] mensaje) {
             try {
@@ -135,7 +150,6 @@ namespace Chat {
             } catch(Exception) {
                 controlador.Error("Ocurrió un error al conectarse con el cliente");
                 cliente.Close();
-                Environment.Exit(0);
             }
         }
 
@@ -147,7 +161,6 @@ namespace Chat {
             } catch(SocketException se) {
                 controlador.Error("Ocurrió un error al conectarse con el servidor " + se);
                 cliente.Close();
-                Environment.Exit(0);
             }
 
             return Parser.BytesACadena(bytes);
@@ -159,7 +172,6 @@ namespace Chat {
                         case "IDENTIFY": 
                             String mensaje = IdentificaUsuario(json["message"], usuarios[cliente]);
                             Envia(cliente, Parser.CadenaABytes(mensaje));  
-                            AvisaNuevoUsuario(usuarios[cliente]);                                                   
                             break;
                         
                         case "MESSAGE":
@@ -197,6 +209,13 @@ namespace Chat {
                             json3.Add("usernames", Nombres());
                             mensaje = JsonConvert.SerializeObject(json3);
                             Envia(cliente, Parser.CadenaABytes(mensaje));
+                            break;
+
+                        case "PUBLIC_MESSAGE":
+                            
+                            EnviaMensaje(json["message"], usuarios[cliente]);
+                                
+                            
                             break;
                     }
         }

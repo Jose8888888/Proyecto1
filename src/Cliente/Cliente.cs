@@ -92,7 +92,6 @@ namespace Chat {
             String mensaje = JsonConvert.SerializeObject(json);
 
             Envia(Parser.CadenaABytes(mensaje));
-            String recibido;
             
             Dictionary<String, String> json2 = JsonConvert.DeserializeObject<Dictionary<String, String>>(MensajeRecibido());
             if (json2 != null) {
@@ -125,6 +124,8 @@ namespace Chat {
                 if (separados.Length == 2) {
                 EnviaMensaje(separados[0], separados[1]);
                 return;
+                } else {
+                    EnviaMensaje(mensaje);
                 }
             }
                 
@@ -136,6 +137,16 @@ namespace Chat {
             Dictionary<string, string> json = new Dictionary<string, string>();
             json.Add("type", "MESSAGE");
             json.Add("username", destinatario);
+            json.Add("message", mensaje);
+            String mensajeJson = JsonConvert.SerializeObject(json);
+            Envia(Parser.CadenaABytes(mensajeJson));
+
+        }
+
+        //envía un mensaje público
+        private void EnviaMensaje(String mensaje) {
+            Dictionary<string, string> json = new Dictionary<string, string>();
+            json.Add("type", "PUBLIC_MESSAGE");
             json.Add("message", mensaje);
             String mensajeJson = JsonConvert.SerializeObject(json);
             Envia(Parser.CadenaABytes(mensajeJson));
@@ -155,7 +166,6 @@ namespace Chat {
 
         //recibe un mensaje del enchufe del servidor
         private String Recibe() {
-
             byte[] bytes = new byte[1024];
             try {
                     enchufe.Receive(bytes, 1024, 0);
@@ -164,7 +174,6 @@ namespace Chat {
                 enchufe.Close();
                 Environment.Exit(0);
             }
-
             return Parser.BytesACadena(bytes);
         }
 
@@ -175,8 +184,8 @@ namespace Chat {
                 if (puedeEscuchar) {
                     estaEscuchando = true;
                     Dictionary<String, String> json;
-                        guardado = Recibe();
-                        json = JsonConvert.DeserializeObject<Dictionary<String, String>>(guardado);
+                    guardado = Recibe();
+                    json = JsonConvert.DeserializeObject<Dictionary<String, String>>(guardado);
 
                     if (json != null) {
                         AnalizaJson(json);
@@ -186,6 +195,7 @@ namespace Chat {
                         Environment.Exit(0);
                     }
                     estaEscuchando = false;
+                    Thread.Sleep(10);
                 }
             }
         }
@@ -202,6 +212,10 @@ namespace Chat {
                             break;
                         case "NEW_STATUS":
                             controlador.Mensaje(json["username"] + " cambió su estado a " + json["status"]);
+                            break;
+                        case "PUBLIC_MESSAGE_FROM": 
+                            mensaje = json["username"] + ": " + json["message"];
+                            controlador.Mensaje(mensaje);
                             break;
                         
                     }
@@ -252,6 +266,7 @@ namespace Chat {
                         }
                     
                     break;
+
             }
             
         }
@@ -262,7 +277,6 @@ namespace Chat {
             lock(enchufe) {
                 if (guardado == "") {
                     return Recibe();
-
                 } else {
                     String recibido = guardado;
                     guardado = "";
