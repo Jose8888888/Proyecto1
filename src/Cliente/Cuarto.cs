@@ -11,6 +11,10 @@ namespace Chat {
         private List<Usuario> miembros = new List<Usuario>();
 
 
+        public Cuarto (String nombre, Usuario miembro) {
+            this.nombre = nombre;
+            miembros.Add(miembro);
+        }
 
         public String GetNombre() {
             return nombre;

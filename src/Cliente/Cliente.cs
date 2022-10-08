@@ -93,13 +93,13 @@ namespace Chat {
 
             Envia(Parser.CadenaABytes(mensaje));
             
-            Dictionary<String, String> json2 = JsonConvert.DeserializeObject<Dictionary<String, String>>(MensajeRecibido());
-            if (json2 != null) {
-                if (json2["type"] == "INFO") {
+            Dictionary<String, String> nuevoJson = JsonConvert.DeserializeObject<Dictionary<String, String>>(MensajeRecibido());
+            if (nuevoJson != null) {
+                if (nuevoJson["type"] == "INFO") {
                     controlador.Mensaje("Nombre aceptado");
                     return;
-                } else if (json2["type"] == "WARNING"){
-                    controlador.Mensaje("Error: " + json2["message"]);
+                } else if (nuevoJson["type"] == "WARNING"){
+                    controlador.Mensaje("Error: " + nuevoJson["message"]);
                     controlador.PideNombre();
                 }
             } else {
@@ -181,10 +181,14 @@ namespace Chat {
         private void Escucha() {
 
             while(true) {
+                 Console.WriteLine(guardado + " Escucha1");
                 if (puedeEscuchar) {
+                     Console.WriteLine(guardado + " Escucha2");
                     estaEscuchando = true;
                     Dictionary<String, String> json;
                     guardado = Recibe();
+
+                     Console.WriteLine(guardado + " Escucha3");
                     json = JsonConvert.DeserializeObject<Dictionary<String, String>>(guardado);
 
                     if (json != null) {
@@ -223,15 +227,15 @@ namespace Chat {
 
         //analiza un comando que recibe de la terminal
         private void AnalizaComando(String comando, String argumento) {
-            Dictionary<string, string> json;
+            Dictionary<string, string> json = new Dictionary<string, string>();
+            String mensaje;
             switch(comando) {
                 case "estado":
                     if (argumento == "ACTIVE" || argumento == "AWAY" || argumento == "BUSY") {
-                        json = new Dictionary<string, string>();
                         json.Add("type", "STATUS");
                         json.Add("status", argumento);
-                        String msj = JsonConvert.SerializeObject(json);
-                        Envia(Parser.CadenaABytes(msj));
+                        mensaje = JsonConvert.SerializeObject(json);
+                        Envia(Parser.CadenaABytes(mensaje));
 
                         json = JsonConvert.DeserializeObject<Dictionary<String, String>>(MensajeRecibido());
                         if (json != null) {
@@ -239,7 +243,7 @@ namespace Chat {
                                 controlador.Mensaje("El estado cambió exitosamente");
                                 return;
                             } else if (json["type"] == "WARNING"){
-                                controlador.Mensaje("WARNING: " + json["message"]);
+                                controlador.Mensaje("Error: " + json["message"]);
                             }
                         } else {
                             controlador.Error("Ocurrió un error con el servidor");
@@ -247,14 +251,13 @@ namespace Chat {
                             Environment.Exit(0);
                         }
                     } else {
-                        controlador.Mensaje(argumento + " no es un estado válido.");
+                        controlador.Error(argumento + " no es un estado válido.");
                     }
                     break;
 
                 case "usuarios":
-                    json = new Dictionary<string, string>();
                     json.Add("type", "USERS");
-                    String mensaje = JsonConvert.SerializeObject(json);
+                    mensaje = JsonConvert.SerializeObject(json);
                     Envia(Parser.CadenaABytes(mensaje));
                     json = JsonConvert.DeserializeObject<Dictionary<String, String>>(MensajeRecibido());
                         if (json != null) {
@@ -267,15 +270,39 @@ namespace Chat {
                     
                     break;
 
+                case "cuarto":
+                    json.Add("type", "NEW_ROOM");
+                    json.Add("roomname", argumento);
+                    mensaje = JsonConvert.SerializeObject(json);
+                    Envia(Parser.CadenaABytes(mensaje));
+                    json = JsonConvert.DeserializeObject<Dictionary<String, String>>(MensajeRecibido());
+                    if (json != null) {
+                        if (json["type"] == "INFO") {
+                            controlador.Mensaje("El cuarto se creó exitosamente");
+                            return;
+                        } else if (json["type"] == "WARNING"){
+                            controlador.Mensaje("Error: " + json["message"]);
+                        }
+                    } else {
+                        controlador.Error("Ocurrió un error con el servidor");
+                        enchufe.Close();
+                        Environment.Exit(0);
+                    }
+                    break;
+
             }
             
         }
 
         //regresa un mensaje que recibe del servidor asegurándose de que el otro hilo de ejecución no lo haya recibido ya
         private String MensajeRecibido() {
+            Console.WriteLine(guardado + " pq1");
             while (estaEscuchando) {}
+             Console.WriteLine(guardado + " pq2");
             lock(enchufe) {
+                 Console.WriteLine(guardado + " pq3");
                 if (guardado == "") {
+                     Console.WriteLine(guardado + " pq4");
                     return Recibe();
                 } else {
                     String recibido = guardado;

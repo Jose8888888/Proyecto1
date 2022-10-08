@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using System.Threading;
 
 
+
 namespace Chat {
     public class Servidor  
     {  
@@ -18,8 +19,8 @@ namespace Chat {
         private Socket servidor = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
         private static Dictionary<Socket, Usuario> usuarios = new Dictionary<Socket, Usuario>();
         private static Dictionary<Usuario, Socket> enchufes = new Dictionary<Usuario, Socket>();
-
         private ControladorVista controlador = new ControladorVista();
+        private List<Cuarto> cuartos = new List<Cuarto>();
 
   	        
         public static void Main()
@@ -82,10 +83,10 @@ namespace Chat {
             } else {
                 foreach(Usuario usuario in usuarios.Values) {
                     if(nombre.Equals(usuario.GetNombre())) {
-                        Dictionary<string, string> json2 = new Dictionary<string, string>();
-                        json2.Add("type", "WARNING");
-                        json2.Add("message", "El usuario '" + nombre + "' ya existe");
-                        return JsonConvert.SerializeObject(json2);
+                        Dictionary<string, string> nuevoJson = new Dictionary<string, string>();
+                        nuevoJson.Add("type", "WARNING");
+                        nuevoJson.Add("message", "El usuario '" + nombre + "' ya existe");
+                        return JsonConvert.SerializeObject(nuevoJson);
                     }
                 }
                 cliente.SetNombre(nombre);
@@ -168,6 +169,7 @@ namespace Chat {
 
         //analiza un mensaje Json
         private void AnalizaJson(Dictionary<string, string> json, Socket cliente) {
+            Dictionary<string, string> nuevoJson = new Dictionary<string, string>();
             switch(json["type"]) {
                         case "IDENTIFY": 
                             String mensaje = IdentificaUsuario(json["message"], usuarios[cliente]);
@@ -187,10 +189,9 @@ namespace Chat {
                                 EnviaMensaje(usuario, json["message"], usuarios[cliente]);
                                 
                             } else {
-                                Dictionary<string, string> json2 = new Dictionary<string, string>();
-                                json2.Add("type", "WARNING");
-                                json2.Add("message", "El usuario '" + json["username"] + "' no existe");
-                                mensaje = JsonConvert.SerializeObject(json2);
+                                nuevoJson.Add("type", "WARNING");
+                                nuevoJson.Add("message", "El usuario '" + json["username"] + "' no existe");
+                                mensaje = JsonConvert.SerializeObject(nuevoJson);
                                 Envia(cliente, Parser.CadenaABytes(mensaje));
                             }
                             break;
@@ -204,16 +205,39 @@ namespace Chat {
                             break;
                         
                         case "USERS":
-                            Dictionary<string, string> json3 = new Dictionary<string, string>();
-                            json3.Add("type", "USER_LIST");
-                            json3.Add("usernames", Nombres());
-                            mensaje = JsonConvert.SerializeObject(json3);
+                            nuevoJson.Add("type", "USER_LIST");
+                            nuevoJson.Add("usernames", Nombres());
+                            mensaje = JsonConvert.SerializeObject(nuevoJson);
                             Envia(cliente, Parser.CadenaABytes(mensaje));
                             break;
 
                         case "PUBLIC_MESSAGE":
                             
                             EnviaMensaje(json["message"], usuarios[cliente]);
+                            break;
+
+                        case "NEW_ROOM":
+                        Console.WriteLine("new room1");
+                            foreach (Cuarto cuarto in cuartos) {
+                                Console.WriteLine("new room2");
+                                if (cuarto.GetNombre() == json["roomname"]) {
+                                    Console.WriteLine("new room3");
+                                    nuevoJson.Add("type", "WARNING");
+                                    nuevoJson.Add("message", "El cuarto " + json["roomname"] + " ya existe.");
+                                    mensaje = JsonConvert.SerializeObject(nuevoJson);
+                                    Envia(cliente, Parser.CadenaABytes(mensaje));
+                                    return;
+                                    
+                                } 
+                            }
+                            Console.WriteLine("new room4");
+                                    Cuarto nuevoCuarto = new Cuarto(json["roomname"], usuarios[cliente]);
+                                    cuartos.Add(nuevoCuarto);
+
+                                    nuevoJson.Add("type", "INFO");
+                                    nuevoJson.Add("message", "succes");
+                                    mensaje = JsonConvert.SerializeObject(nuevoJson);
+                                    Envia(cliente, Parser.CadenaABytes(mensaje));
                                 
                             
                             break;
