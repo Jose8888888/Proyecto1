@@ -19,8 +19,9 @@ namespace Chat {
 
         private String nombre = "";
         private Estado estado;
-        byte[] bytes = new byte[2048];  
-        
+        byte[] bytes = new byte[2048]; 
+        private List<Cuarto> cuartos = new List<Cuarto>();
+        private List<Cuarto> invitaciones = new List<Cuarto>();        
 
 
 
@@ -39,6 +40,24 @@ namespace Chat {
 
         public void SetEstado(Estado estado) {
             this.estado = estado;
+        }
+
+        public void AgregaCuarto(Cuarto cuarto) {
+            cuartos.Add(cuarto);
+        }
+
+        public void AgregaInvitacion(Cuarto invitacion) {
+            invitaciones.Add(invitacion);
+        }
+
+        //regresa true si el usuario está en el cuarto que recibe
+        public bool EstaEnCuarto(Cuarto cuarto) {
+            foreach (Cuarto c in cuartos) {
+                if (c == cuarto) {
+                    return true;
+                }
+            }
+            return false;
         }
 
     }

@@ -14,6 +14,7 @@ namespace Chat {
         public Cuarto (String nombre, Usuario miembro) {
             this.nombre = nombre;
             miembros.Add(miembro);
+            miembro.AgregaCuarto(this);
         }
 
         public String GetNombre() {

@@ -181,14 +181,11 @@ namespace Chat {
         private void Escucha() {
 
             while(true) {
-                 Console.WriteLine(guardado + " Escucha1");
                 if (puedeEscuchar) {
-                     Console.WriteLine(guardado + " Escucha2");
                     estaEscuchando = true;
                     Dictionary<String, String> json;
                     guardado = Recibe();
 
-                     Console.WriteLine(guardado + " Escucha3");
                     json = JsonConvert.DeserializeObject<Dictionary<String, String>>(guardado);
 
                     if (json != null) {
@@ -220,6 +217,9 @@ namespace Chat {
                         case "PUBLIC_MESSAGE_FROM": 
                             mensaje = json["username"] + ": " + json["message"];
                             controlador.Mensaje(mensaje);
+                            break;
+                        case "INVITATION":
+                            controlador.Mensaje(json["message"]);
                             break;
                         
                     }
@@ -290,19 +290,43 @@ namespace Chat {
                     }
                     break;
 
+                case "invitar":
+                    String[] separado = argumento.Split(", ");
+                    String cuarto = separado[0];
+                    List<String> usuarios = new List<string>();
+                    for (int i = 1; i < separado.Length; i++) {
+                        usuarios.Add(separado[i]);
+                    }
+                    json.Add("type", "INVITE");
+                    json.Add("roomname", cuarto);
+                    json.Add("usernames", JsonConvert.SerializeObject(usuarios));
+                    mensaje = JsonConvert.SerializeObject(json);
+                    Envia(Parser.CadenaABytes(mensaje));
+
+                    json = JsonConvert.DeserializeObject<Dictionary<String, String>>(MensajeRecibido());
+                    if (json != null) {
+                        if (json["type"] == "INFO") {
+                            controlador.Mensaje("La invitación se realizó exitosamente");
+                            return;
+                        } else if (json["type"] == "WARNING"){
+                            controlador.Mensaje("Error: " + json["message"]);
+                        }
+                    } else {
+                        controlador.Error("Ocurrió un error con el servidor");
+                        enchufe.Close();
+                        Environment.Exit(0);
+                    }
+                    
+                    break;
             }
             
         }
 
         //regresa un mensaje que recibe del servidor asegurándose de que el otro hilo de ejecución no lo haya recibido ya
         private String MensajeRecibido() {
-            Console.WriteLine(guardado + " pq1");
             while (estaEscuchando) {}
-             Console.WriteLine(guardado + " pq2");
             lock(enchufe) {
-                 Console.WriteLine(guardado + " pq3");
                 if (guardado == "") {
-                     Console.WriteLine(guardado + " pq4");
                     return Recibe();
                 } else {
                     String recibido = guardado;

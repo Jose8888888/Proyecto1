@@ -217,11 +217,8 @@ namespace Chat {
                             break;
 
                         case "NEW_ROOM":
-                        Console.WriteLine("new room1");
-                            foreach (Cuarto cuarto in cuartos) {
-                                Console.WriteLine("new room2");
-                                if (cuarto.GetNombre() == json["roomname"]) {
-                                    Console.WriteLine("new room3");
+                            foreach (Cuarto c in cuartos) {
+                                if (c.GetNombre() == json["roomname"]) {
                                     nuevoJson.Add("type", "WARNING");
                                     nuevoJson.Add("message", "El cuarto " + json["roomname"] + " ya existe.");
                                     mensaje = JsonConvert.SerializeObject(nuevoJson);
@@ -230,7 +227,6 @@ namespace Chat {
                                     
                                 } 
                             }
-                            Console.WriteLine("new room4");
                                     Cuarto nuevoCuarto = new Cuarto(json["roomname"], usuarios[cliente]);
                                     cuartos.Add(nuevoCuarto);
 
@@ -240,6 +236,66 @@ namespace Chat {
                                     Envia(cliente, Parser.CadenaABytes(mensaje));
                                 
                             
+                            break;
+
+                        case "INVITE":
+                            Cuarto cuarto = null;
+                            foreach (Cuarto c in cuartos) {
+                                if (c.GetNombre() == json["roomname"]) {
+                                    cuarto = c;
+                                }
+                            }
+                            if (cuarto == null) {
+                                nuevoJson.Add("type", "WARNING");
+                                nuevoJson.Add("message", "El cuarto '" + json["roomname"] + "' no existe.");
+                                mensaje = JsonConvert.SerializeObject(nuevoJson);
+                                Envia(cliente, Parser.CadenaABytes(mensaje));
+                                break;
+                            } else if (usuarios[cliente].EstaEnCuarto(cuarto)) {
+                                List<Usuario> invitados = new List<Usuario>();
+                                List<string> nombres = JsonConvert.DeserializeObject<List<string>>(json["usernames"]);
+                                int numInvitados = 0;
+                                foreach (String nombre in nombres) {
+                                    foreach (Usuario u in usuarios.Values) {
+                                        if (u.GetNombre() == nombre) {
+                                            invitados.Add(u);
+                                            break;
+                                        }
+                                    }
+                                    if (invitados.Count == numInvitados) {
+                                        nuevoJson.Add("type", "WARNING");
+                                        nuevoJson.Add("message", "El usuario " + nombre + " no existe.");
+                                        mensaje = JsonConvert.SerializeObject(nuevoJson);
+                                        Envia(cliente, Parser.CadenaABytes(mensaje));
+                                        return;
+                                    }
+                                    numInvitados++;
+                                }
+                            
+
+                                nuevoJson.Add("type", "INFO");
+                                nuevoJson.Add("message", "success");
+                                mensaje = JsonConvert.SerializeObject(nuevoJson);
+                                Envia(cliente, Parser.CadenaABytes(mensaje));
+
+                                nuevoJson.Clear();
+                                nuevoJson.Add("type", "INVITATION");
+                                nuevoJson.Add("message", usuarios[cliente].GetNombre() + " te invita al cuarto '" + json["roomname"] + "'");
+                                nuevoJson.Add("username", usuarios[cliente].GetNombre());
+                                nuevoJson.Add("roomname", json["roomname"]);
+                                mensaje = JsonConvert.SerializeObject(nuevoJson);
+                                foreach (Usuario invitado in invitados) {
+                                    invitado.AgregaInvitacion(cuarto);
+                                    Envia(enchufes[invitado], Parser.CadenaABytes(mensaje));
+                                }
+                            } else {
+                                nuevoJson.Add("type", "WARNING");
+                                nuevoJson.Add("message", "No estás en el cuarto '" + json["roomname"] + "'");
+                                mensaje = JsonConvert.SerializeObject(nuevoJson);
+                                Envia(cliente, Parser.CadenaABytes(mensaje));
+                                break;
+                            }
+
                             break;
                     }
         }
