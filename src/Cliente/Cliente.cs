@@ -229,6 +229,7 @@ namespace Chat {
         private void AnalizaComando(String comando, String argumento) {
             Dictionary<string, string> json = new Dictionary<string, string>();
             String mensaje;
+            String cuarto;
             switch(comando) {
                 case "estado":
                     if (argumento == "ACTIVE" || argumento == "AWAY" || argumento == "BUSY") {
@@ -256,18 +257,41 @@ namespace Chat {
                     break;
 
                 case "usuarios":
-                    json.Add("type", "USERS");
-                    mensaje = JsonConvert.SerializeObject(json);
-                    Envia(Parser.CadenaABytes(mensaje));
-                    json = JsonConvert.DeserializeObject<Dictionary<String, String>>(MensajeRecibido());
+                    if (argumento == "") {
+                        json.Add("type", "USERS");
+                        mensaje = JsonConvert.SerializeObject(json);
+                        Envia(Parser.CadenaABytes(mensaje));
+                        json = JsonConvert.DeserializeObject<Dictionary<String, String>>(MensajeRecibido());
+                            if (json != null) {
+                                controlador.Mensaje(json["usernames"]);
+                            } else {
+                                controlador.Error("Ocurrió un error con el servidor");
+                                enchufe.Close();
+                                Environment.Exit(0);
+                            }
+                    
+                    } else {
+                        cuarto = argumento;
+                        json.Add("type", "ROOM_USERS");
+                        json.Add("roomname", cuarto);
+                        mensaje = JsonConvert.SerializeObject(json);
+                        Envia(Parser.CadenaABytes(mensaje));
+                        json = JsonConvert.DeserializeObject<Dictionary<String, String>>(MensajeRecibido());
                         if (json != null) {
-                            controlador.Mensaje(json["usernames"]);
+                            if (json["type"] == "ROOM_USER_LIST") {
+                                controlador.Mensaje(json["usernames"]);
+                                
+                            } else if (json["type"] == "WARNING"){
+                                controlador.Mensaje("Error: " + json["message"]);
+                            }
                         } else {
                             controlador.Error("Ocurrió un error con el servidor");
                             enchufe.Close();
                             Environment.Exit(0);
                         }
                     
+                    }
+
                     break;
 
                 case "cuarto":
@@ -292,7 +316,7 @@ namespace Chat {
 
                 case "invitar":
                     String[] separado = argumento.Split(", ");
-                    String cuarto = separado[0];
+                    cuarto = separado[0];
                     List<String> usuarios = new List<string>();
                     for (int i = 1; i < separado.Length; i++) {
                         usuarios.Add(separado[i]);
@@ -341,6 +365,7 @@ namespace Chat {
                     }
 
                     break;
+
             }
             
         }

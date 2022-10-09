@@ -333,6 +333,32 @@ namespace Chat {
                                 return;
                             }
                             break;
+
+                        case "ROOM_USERS":
+                            cuarto = BuscaCuarto(json["roomname"]);
+                            if (cuarto == null) {
+                                nuevoJson.Add("type", "WARNING");
+                                nuevoJson.Add("message", "El cuarto '" + json["roomname"] + "' no existe");
+                                mensaje = JsonConvert.SerializeObject(nuevoJson);
+                                Envia(cliente, Parser.CadenaABytes(mensaje));
+                            } else if (usuarios[cliente].EstaEnCuarto(cuarto)) {
+                                List<String> usuarios = new List<String>();
+                                foreach (Usuario u in cuarto.GetMiembros()) {
+                                    usuarios.Add(u.GetNombre());
+                                }
+
+                                nuevoJson.Add("type", "ROOM_USER_LIST");
+                                nuevoJson.Add("usernames", JsonConvert.SerializeObject(usuarios));
+                                mensaje = JsonConvert.SerializeObject(nuevoJson);
+                                Envia(cliente, Parser.CadenaABytes(mensaje));
+                            } else {
+                                nuevoJson.Add("type", "WARNING");
+                                nuevoJson.Add("message", "El usuario no se ha unido al cuarto '" + json["roomname"] + "'");
+                                mensaje = JsonConvert.SerializeObject(nuevoJson);
+                                Envia(cliente, Parser.CadenaABytes(mensaje));
+                            }
+
+                            break;
                     }
         }
 
