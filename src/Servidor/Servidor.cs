@@ -239,12 +239,7 @@ namespace Chat {
                             break;
 
                         case "INVITE":
-                            Cuarto cuarto = null;
-                            foreach (Cuarto c in cuartos) {
-                                if (c.GetNombre() == json["roomname"]) {
-                                    cuarto = c;
-                                }
-                            }
+                            Cuarto cuarto = BuscaCuarto(json["roomname"]);
                             if (cuarto == null) {
                                 nuevoJson.Add("type", "WARNING");
                                 nuevoJson.Add("message", "El cuarto '" + json["roomname"] + "' no existe.");
@@ -296,6 +291,47 @@ namespace Chat {
                                 break;
                             }
 
+                            break;
+
+                        case "JOIN_ROOM":
+                            cuarto = BuscaCuarto(json["roomname"]);
+                            if (cuarto == null) {
+                                nuevoJson.Add("type", "WARNING");
+                                nuevoJson.Add("message", "El cuarto '" + json["roomname"] + "' no existe.");
+                                mensaje = JsonConvert.SerializeObject(nuevoJson);
+                                Envia(cliente, Parser.CadenaABytes(mensaje));
+                                break;
+                            } else if (usuarios[cliente].EstaEnCuarto(cuarto)) {
+                                nuevoJson.Add("type", "WARNING");
+                                nuevoJson.Add("message", "El usuario ya se unió al cuarto '" + json["roomname"] + "'");
+                                mensaje = JsonConvert.SerializeObject(nuevoJson);
+                                Envia(cliente, Parser.CadenaABytes(mensaje));
+                                return;
+                            } else if (usuarios[cliente].EstaInvitado(cuarto)) {
+                                nuevoJson.Add("type", "INFO");
+                                nuevoJson.Add("message", "success");
+                                mensaje = JsonConvert.SerializeObject(nuevoJson);
+                                Envia(cliente, Parser.CadenaABytes(mensaje));
+                                
+                                nuevoJson.Clear();
+                                nuevoJson.Add("type", "JOINED_ROOM");
+                                nuevoJson.Add("roomname", json["roomname"]);
+                                nuevoJson.Add("username", usuarios[cliente].GetNombre());
+                                mensaje = JsonConvert.SerializeObject(nuevoJson);
+                                foreach (Usuario miembro in cuarto.GetMiembros()) {
+                                    Envia(enchufes[miembro], Parser.CadenaABytes(mensaje));
+                                }
+                                usuarios[cliente].AgregaCuarto(cuarto);
+                                cuarto.AgregaMiembro(usuarios[cliente]);
+                                
+            
+                            } else {
+                                nuevoJson.Add("type", "WARNING");
+                                nuevoJson.Add("message", "El usuario no ha sido invitado al cuarto '" + json["roomname"] + "'");
+                                mensaje = JsonConvert.SerializeObject(nuevoJson);
+                                Envia(cliente, Parser.CadenaABytes(mensaje));
+                                return;
+                            }
                             break;
                     }
         }
@@ -349,6 +385,17 @@ namespace Chat {
                 nombres.Add(usuario.GetNombre());
             }
             return JsonConvert.SerializeObject(nombres);
+        }
+
+        //regresa el cuarto con el nombre que recibe
+        private Cuarto BuscaCuarto(String nombre) {
+            Cuarto cuarto = null;
+            foreach (Cuarto c in cuartos) {
+                if (c.GetNombre() == nombre) {
+                    cuarto = c;
+                }
+            }
+            return cuarto;
         }
     }
 }

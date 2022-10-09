@@ -60,5 +60,15 @@ namespace Chat {
             return false;
         }
 
+        //regresa true si el usuario está en invitado al cuarto que recibe
+        public bool EstaInvitado(Cuarto cuarto) {
+            foreach (Cuarto c in invitaciones) {
+                if (c == cuarto) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
     }
 }

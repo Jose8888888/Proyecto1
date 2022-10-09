@@ -318,6 +318,29 @@ namespace Chat {
                     }
                     
                     break;
+
+                case "unirse":
+                    cuarto = argumento;
+                    json.Add("type", "JOIN_ROOM");
+                    json.Add("roomname", cuarto);
+                    mensaje = JsonConvert.SerializeObject(json);
+                    Envia(Parser.CadenaABytes(mensaje));
+
+                    json = JsonConvert.DeserializeObject<Dictionary<String, String>>(MensajeRecibido());
+                    if (json != null) {
+                        if (json["type"] == "INFO") {
+                            controlador.Mensaje("Te has unido al cuarto '" + cuarto + "'");
+                            return;
+                        } else if (json["type"] == "WARNING"){
+                            controlador.Mensaje("Error: " + json["message"]);
+                        }
+                    } else {
+                        controlador.Error("Ocurrió un error con el servidor");
+                        enchufe.Close();
+                        Environment.Exit(0);
+                    }
+
+                    break;
             }
             
         }
