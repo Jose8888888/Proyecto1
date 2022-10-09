@@ -109,7 +109,7 @@ namespace Chat {
             }
         }
 
-        //revisa si es un comando o un mensaje es público, privado, etc.
+        //revisa si es un comando o un mensaje público, privado, etc.
         private void AnalizaMensaje(String mensaje) {
             puedeEscuchar = false;
             if (mensaje != "" && mensaje[0] == '/') {
@@ -120,20 +120,24 @@ namespace Chat {
                 }
                 AnalizaComando(separados[0].Remove(0,1), argumento);
             } else {
-                String[] separados = mensaje.Split(": ", 2);
-                if (separados.Length == 2) {
-                EnviaMensaje(separados[0], separados[1]);
-                return;
+                String[] separados = mensaje.Split("] ", 2);
+                if (mensaje[0] == '[' && separados.Length > 1) {
+                    EnviaMensajeACuarto(separados[0].Remove(0,1), separados[1]);
                 } else {
-                    EnviaMensaje(mensaje);
+                    separados = mensaje.Split(": ", 2);
+                    if (separados.Length == 2) {
+                        EnviaMensajePrivado(separados[0], separados[1]);
+                        return;
+                    } else {
+                        EnviaMensajePublico(mensaje);
+                    }
                 }
             }
-                
             
         }
 
         //envía un mensaje privado
-        private void EnviaMensaje(String destinatario, String mensaje) {
+        private void EnviaMensajePrivado(String destinatario, String mensaje) {
             Dictionary<string, string> json = new Dictionary<string, string>();
             json.Add("type", "MESSAGE");
             json.Add("username", destinatario);
@@ -144,9 +148,20 @@ namespace Chat {
         }
 
         //envía un mensaje público
-        private void EnviaMensaje(String mensaje) {
+        private void EnviaMensajePublico(String mensaje) {
             Dictionary<string, string> json = new Dictionary<string, string>();
             json.Add("type", "PUBLIC_MESSAGE");
+            json.Add("message", mensaje);
+            String mensajeJson = JsonConvert.SerializeObject(json);
+            Envia(Parser.CadenaABytes(mensajeJson));
+
+        }
+
+        //envía un mensaje a un cuarto
+        private void EnviaMensajeACuarto(String cuarto, String mensaje) {
+            Dictionary<string, string> json = new Dictionary<string, string>();
+            json.Add("type", "ROOM_MESSAGE");
+            json.Add("roomname", cuarto);
             json.Add("message", mensaje);
             String mensajeJson = JsonConvert.SerializeObject(json);
             Envia(Parser.CadenaABytes(mensajeJson));
@@ -221,7 +236,15 @@ namespace Chat {
                         case "INVITATION":
                             controlador.Mensaje(json["message"]);
                             break;
-                        
+                        case "ROOM_MESSAGE_FROM":
+                            mensaje = "[" + json["roomname"] + "] " + json["username"] + ": " + json["message"];
+                            controlador.Mensaje(mensaje);
+                            break;
+                        case "WARNING":
+                            if (json.ContainsKey("operation") && json["operation"] == "ROOM_MESSAGE") {
+                                controlador.Error(json["message"]);
+                            }
+                            break;
                     }
         }
 
