@@ -1,6 +1,6 @@
 using System;  
 
-namespace Tests {
+namespace Chat {
     public static class MetodosTests  
     {  
         public static String NombreAleatorio() {

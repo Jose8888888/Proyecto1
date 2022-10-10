@@ -35,6 +35,16 @@ using System;
         public String Escucha() {
           return vista.Escucha();
         }
+
+        //pide la IP
+        public String PideIP() {
+          return vista.PideIP();
+        }
+
+        //pide el puerto
+        public int PidePuerto() {
+          return vista.PidePuerto();
+        }
         
     }
   }

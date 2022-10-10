@@ -13,21 +13,30 @@ using System.Threading;
 namespace Chat {
     public class Servidor  
     {  
-        private static IPHostEntry host = Dns.GetHostEntry("localhost");  
-        private static IPAddress ipAddress = host.AddressList[0]; 
-        private static IPEndPoint localEndPoint = new IPEndPoint(ipAddress, 1234);  
-        private Socket servidor = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
+        private static IPHostEntry host;
+        private static IPAddress ipAddress; 
+        private static IPEndPoint localEndPoint;  
+        private Socket servidor; 
         private Dictionary<Socket, Usuario> usuarios = new Dictionary<Socket, Usuario>();
         private Dictionary<Usuario, Socket> enchufes = new Dictionary<Usuario, Socket>();
-        private ControladorVista controlador = new ControladorVista();
+        private static ControladorVista controlador = new ControladorVista();
         private List<Cuarto> cuartos = new List<Cuarto>();
 
   	        
         public static void Main()
         {   
-            Servidor servidor = new Servidor();
+            String IP = controlador.PideIP();
+            int puerto = controlador.PidePuerto();
+            Servidor servidor = new Servidor("localhost", 1234);
             servidor.Inicia();    
             
+        }
+
+        public Servidor(String IP, int puerto) {
+            host = Dns.GetHostEntry("localhost");  
+            ipAddress = host.AddressList[0]; 
+            localEndPoint = new IPEndPoint(ipAddress, 1234);  
+            servidor = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
         }
 
         public void Inicia()  

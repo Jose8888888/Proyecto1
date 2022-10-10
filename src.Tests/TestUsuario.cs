@@ -1,8 +1,7 @@
 using System;  
 using NUnit.Framework;
-using Servidor;
 
-namespace Tests {
+namespace Chat {
     
     
     [TestFixture]

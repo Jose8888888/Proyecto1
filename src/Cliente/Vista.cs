@@ -32,5 +32,16 @@ using System;
         public String Escucha() {
             return Console.ReadLine();
         }
+
+        //pide la IP
+        public String PideIP() {
+          Console.WriteLine("Escribe la IP: ");
+          return Console.ReadLine();
+        }
+
+        //pide el puerto
+        public int PidePuerto() {
+          Console.WriteLine("Escribe el puerto: ");
+          return int.Parse(Console.ReadLine());        }
     }
   }
