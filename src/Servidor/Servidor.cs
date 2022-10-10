@@ -390,6 +390,42 @@ namespace Chat {
                             }
 
                             break;
+
+                        case "LEAVE_ROOM":
+                            cuarto = BuscaCuarto(json["roomname"]);
+                            if (cuarto == null) {
+                                nuevoJson.Add("type", "WARNING");
+                                nuevoJson.Add("message", "El cuarto '" + json["roomname"] + "' no existe");
+                                nuevoJson.Add("operation", "ROOM_MESSAGE");
+                                mensaje = JsonConvert.SerializeObject(nuevoJson);
+
+                                Envia(cliente, Parser.CadenaABytes(mensaje));
+                            } else if (usuarios[cliente].EstaEnCuarto(cuarto)) {
+                                cuarto.EliminaMiembro(usuarios[cliente]);
+                                usuarios[cliente].EliminaCuarto(cuarto);
+
+                                nuevoJson.Add("type", "INFO");
+                                nuevoJson.Add("message", "success");
+                                mensaje = JsonConvert.SerializeObject(nuevoJson);
+                                Envia(cliente, Parser.CadenaABytes(mensaje));
+
+                                nuevoJson.Clear();
+                                nuevoJson.Add("type", "LEFT_ROOM");
+                                nuevoJson.Add("roomname", json["roomname"]);
+                                nuevoJson.Add("username", usuarios[cliente].GetNombre());
+                                mensaje = JsonConvert.SerializeObject(nuevoJson);
+                                foreach (Usuario u in cuarto.GetMiembros()) {
+                                    Envia(enchufes[u], Parser.CadenaABytes(mensaje));
+                                }
+                            } else {
+                                nuevoJson.Add("type", "WARNING");
+                                nuevoJson.Add("message", "El usuario no se ha unido al cuarto '" + json["roomname"] + "'");
+                                nuevoJson.Add("operation", "ROOM_MESSAGE");
+                                mensaje = JsonConvert.SerializeObject(nuevoJson);
+                                Envia(cliente, Parser.CadenaABytes(mensaje));
+                            }
+                            break;
+                            
                     }
         }
 

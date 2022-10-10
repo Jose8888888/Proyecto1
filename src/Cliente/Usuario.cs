@@ -50,6 +50,10 @@ namespace Chat {
             invitaciones.Add(invitacion);
         }
 
+        public void EliminaCuarto(Cuarto cuarto) {
+            cuartos.Remove(cuarto);
+        }
+
         //regresa true si el usuario está en el cuarto que recibe
         public bool EstaEnCuarto(Cuarto cuarto) {
             foreach (Cuarto c in cuartos) {

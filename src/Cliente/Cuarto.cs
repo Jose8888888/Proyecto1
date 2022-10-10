@@ -33,6 +33,10 @@ namespace Chat {
             miembros.Add(miembro);
         }
 
+        public void EliminaMiembro(Usuario miembro) {
+            miembros.Remove(miembro);
+        }
+
 
     }
 }

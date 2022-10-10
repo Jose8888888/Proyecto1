@@ -245,6 +245,10 @@ namespace Chat {
                                 controlador.Error(json["message"]);
                             }
                             break;
+                        case "LEFT_ROOM":
+                            mensaje = json["username"] + " ha abandonado el cuarto '" + json["roomname"] + "'";
+                            controlador.Mensaje(mensaje);
+                            break;
                     }
         }
 
@@ -387,6 +391,28 @@ namespace Chat {
                         Environment.Exit(0);
                     }
 
+                    break;
+
+                case "salir":
+                    cuarto = argumento;
+                    json.Add("type", "LEAVE_ROOM");
+                    json.Add("roomname", cuarto);
+                    mensaje = JsonConvert.SerializeObject(json);
+                    Envia(Parser.CadenaABytes(mensaje));
+
+                    json = JsonConvert.DeserializeObject<Dictionary<String, String>>(MensajeRecibido());
+                    if (json != null) {
+                        if (json["type"] == "INFO") {
+                            controlador.Mensaje("Has abandonado el cuarto '" + cuarto + "'");
+                            return;
+                        } else if (json["type"] == "WARNING"){
+                            controlador.Mensaje("Error: " + json["message"]);
+                        }
+                    } else {
+                        controlador.Error("Ocurrió un error con el servidor");
+                        enchufe.Close();
+                        Environment.Exit(0);
+                    }
                     break;
 
             }
