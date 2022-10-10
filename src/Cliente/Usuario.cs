@@ -42,6 +42,10 @@ namespace Chat {
             this.estado = estado;
         }
 
+        public List<Cuarto> GetCuartos() {
+            return cuartos;
+        }
+
         public void AgregaCuarto(Cuarto cuarto) {
             cuartos.Add(cuarto);
         }

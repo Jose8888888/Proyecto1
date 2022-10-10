@@ -18,9 +18,10 @@ namespace Chat {
         private static Socket enchufe = new Socket(ipAddress.AddressFamily,  
                     SocketType.Stream, ProtocolType.Tcp);  
         private ControladorVista controlador;
-        private static String guardado = "";
-        private static bool puedeEscuchar = true;
-        private static bool estaEscuchando = false;
+        private String guardado = "";
+        private bool puedeEscuchar = true;
+        private bool estaEscuchando = false;
+        private bool estaActivo = true;
 
 
         public static void Main()  
@@ -34,7 +35,7 @@ namespace Chat {
 
             while(true) {
                 cliente.AnalizaMensaje(cliente.controlador.Escucha());
-                puedeEscuchar = true;
+                cliente.puedeEscuchar = true;
             }
         }  
 
@@ -121,7 +122,7 @@ namespace Chat {
                 AnalizaComando(separados[0].Remove(0,1), argumento);
             } else {
                 String[] separados = mensaje.Split("] ", 2);
-                if (mensaje[0] == '[' && separados.Length > 1) {
+                if (mensaje != "" && mensaje[0] == '[' && separados.Length > 1) {
                     EnviaMensajeACuarto(separados[0].Remove(0,1), separados[1]);
                 } else {
                     separados = mensaje.Split(": ", 2);
@@ -205,7 +206,7 @@ namespace Chat {
 
                     if (json != null) {
                         AnalizaJson(json);
-                    } else {
+                    } else if (estaActivo) {
                         controlador.Error("Ocurrió un error con el servidor");
                         enchufe.Close();
                         Environment.Exit(0);
@@ -249,6 +250,9 @@ namespace Chat {
                             mensaje = json["username"] + " ha abandonado el cuarto '" + json["roomname"] + "'";
                             controlador.Mensaje(mensaje);
                             break;
+                        case "DISCONNECTED":
+                            controlador.Mensaje(json["username"] + " se desconectó del chat");
+                        break;
                     }
         }
 
@@ -415,6 +419,17 @@ namespace Chat {
                     }
                     break;
 
+                case "desconectar":
+                    estaActivo = false;
+                    json.Add("type", "DISCONNECT");
+                    mensaje = JsonConvert.SerializeObject(json);
+                    Envia(Parser.CadenaABytes(mensaje));
+                    Environment.Exit(0);
+                    break;
+
+                default:
+                    EnviaMensajePublico("/" + comando + " " + argumento);
+                    break;
             }
             
         }

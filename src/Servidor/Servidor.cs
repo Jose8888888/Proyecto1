@@ -56,16 +56,13 @@ namespace Chat {
         
         //recibe información del cliente
         public void Escucha(Socket cliente) {
-            bool estaActivo = true;
-
-            while(estaActivo) {
+            while(cliente.Connected) {
                 Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Recibe(cliente));
                 if (json != null) {
                     AnalizaJson(json, cliente);
                 } else {
-                    controlador.Error("Ocurrió un error con el cliente");
-                    cliente.Close();
-                    estaActivo = false;
+                    controlador.Error("Ocurrió un error con un cliente");
+                    DesconectaUsuario(usuarios[cliente]);
                 }
             }
         }       
@@ -161,7 +158,7 @@ namespace Chat {
                 cliente.Receive(bytes, 1024, 0);
             } catch(SocketException se) {
                 controlador.Error("Ocurrió un error al conectarse con el servidor " + se);
-                cliente.Close();
+                DesconectaUsuario(usuarios[cliente]);
             }
 
             return Parser.BytesACadena(bytes);
@@ -425,7 +422,29 @@ namespace Chat {
                                 Envia(cliente, Parser.CadenaABytes(mensaje));
                             }
                             break;
-                            
+
+                        case "DISCONNECT":
+                            String nombreUsuario = usuarios[cliente].GetNombre();
+                            nuevoJson.Add("type", "LEFT_ROOM");
+                            nuevoJson.Add("username", nombreUsuario);
+                            List<Cuarto> listaCuartos = usuarios[cliente].GetCuartos();
+                            DesconectaUsuario(usuarios[cliente]);
+                            foreach (Cuarto c in listaCuartos) {
+                                nuevoJson.Add("roomname", c.GetNombre());
+                                mensaje = JsonConvert.SerializeObject(nuevoJson);
+                                foreach (Usuario miembro in c.GetMiembros()) {
+                                     Envia(enchufes[miembro], Parser.CadenaABytes(mensaje));
+                                }
+                            }
+
+                            nuevoJson.Clear();
+                            nuevoJson.Add("type", "DISCONNECTED");
+                            nuevoJson.Add("username", nombreUsuario);
+                            mensaje = JsonConvert.SerializeObject(nuevoJson);
+                            foreach (Usuario u in usuarios.Values) {
+                                     Envia(enchufes[u], Parser.CadenaABytes(mensaje));
+                                }
+                            break;
                     }
         }
 
@@ -489,6 +508,17 @@ namespace Chat {
                 }
             }
             return cuarto;
+        }
+
+        //desconecta a un usuario
+        private void DesconectaUsuario(Usuario usuario) {
+            enchufes[usuario].Close();
+            foreach (Cuarto cuarto in cuartos) {
+                cuarto.EliminaMiembro(usuario);
+            }
+            usuarios.Remove(enchufes[usuario]);
+            enchufes.Remove(usuario);
+            
         }
     }
 }
