@@ -11,12 +11,11 @@ using System.Threading;
 namespace Chat {
     public class Cliente  
     {  
-        private static IPHostEntry host = Dns.GetHostEntry("localhost");  
-        private static IPAddress ipAddress = host.AddressList[0];  
-        private IPEndPoint remoteEP = new IPEndPoint(ipAddress, 1234);  
+        private static IPHostEntry host;  
+        private static IPAddress ipAddress;  
+        private IPEndPoint remoteEP;  
   
-        private static Socket enchufe = new Socket(ipAddress.AddressFamily,  
-                    SocketType.Stream, ProtocolType.Tcp);  
+        private static Socket enchufe;  
         private ControladorVista controlador;
         private String guardado = "";
         private bool puedeEscuchar = true;
@@ -26,7 +25,10 @@ namespace Chat {
 
         public static void Main()  
         {  
-            Cliente cliente = new Cliente();
+            ControladorVista controlador = new ControladorVista();
+            String IP = controlador.PideIP();
+            int puerto = controlador.PidePuerto();
+            Cliente cliente = new Cliente(IP, puerto);
             cliente.Inicia();  
             Thread hilo = new Thread(cliente.Escucha);
             hilo.Start();
@@ -39,8 +41,13 @@ namespace Chat {
             }
         }  
 
-        public Cliente() {
+        public Cliente(String IP, int puerto) {
             controlador = new ControladorVista(this);
+
+            host = Dns.GetHostEntry(IP);  
+            ipAddress = host.AddressList[0]; 
+            remoteEP = new IPEndPoint(ipAddress, puerto);  
+            enchufe = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
         }
   
         public void Inicia()  
