@@ -17,7 +17,7 @@ namespace Chat {
         BUSY
         }
 
-        private String nombre = "";
+        private String nombre = null;
         private Estado estado;
         byte[] bytes = new byte[2048]; 
         private List<Cuarto> cuartos = new List<Cuarto>();

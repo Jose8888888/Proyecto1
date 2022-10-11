@@ -260,6 +260,11 @@ namespace Chat {
                         case "DISCONNECTED":
                             controlador.Mensaje(json["username"] + " se desconectó del chat");
                         break;
+                        case "ERROR":
+                            controlador.Error(json["message"]);
+                            enchufe.Close();
+                            Environment.Exit(0);
+                            break;
                     }
         }
 

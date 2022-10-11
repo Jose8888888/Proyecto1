@@ -27,26 +27,25 @@ namespace Chat {
         {   
             String IP = controlador.PideIP();
             int puerto = controlador.PidePuerto();
-            Servidor servidor = new Servidor("localhost", 1234);
+            Servidor servidor = new Servidor("localhost", puerto);
             servidor.Inicia();    
             
         }
 
         public Servidor(String IP, int puerto) {
-            host = Dns.GetHostEntry("localhost");  
+            host = Dns.GetHostEntry(IP);  
             ipAddress = host.AddressList[0]; 
-            localEndPoint = new IPEndPoint(ipAddress, 1234);  
+            localEndPoint = new IPEndPoint(ipAddress, puerto);  
             servidor = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
         }
 
         public void Inicia()  
-        {  
-           
-      
+        {        
             try {   
   
                 servidor = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);  
                 servidor.Bind(localEndPoint);  
+
                 servidor.Listen(10);  
   
                 controlador.Mensaje("Esperando conexión...");  
@@ -57,6 +56,7 @@ namespace Chat {
             catch (Exception e)  
             {  
                 controlador.Error("Ocurrió un error: " + e.ToString());  
+                Environment.Exit(0);
             }  
 
             ConectaCliente();
@@ -67,9 +67,14 @@ namespace Chat {
         public void Escucha(Socket cliente) {
             while(cliente.Connected) {
                 Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Recibe(cliente));
-                if (json != null) {
+                if (json != null && (json["type"] == "IDENTIFY" || usuarios[cliente].GetNombre() != null)) {
                     AnalizaJson(json, cliente);
                 } else {
+                    json.Clear();
+                    json.Add("type", "ERROR");
+                    json.Add("message", "No te has identificado");
+                    String mensaje = JsonConvert.SerializeObject(json);
+                    Envia(cliente, Parser.CadenaABytes(mensaje));
                     controlador.Error("Ocurrió un error con un cliente");
                     DesconectaUsuario(usuarios[cliente]);
                 }
@@ -80,7 +85,7 @@ namespace Chat {
 
         //le pone nombre a un usuario si es válido, si no regresa el mensaje de error
         private String IdentificaUsuario(String nombre, Usuario cliente) {
-            if(!cliente.GetNombre().Equals("")) {
+            if(cliente.GetNombre() != null) {
                 Dictionary<string, string> json = new Dictionary<string, string>();
                 json.Add("type", "WARNING");
                 json.Add("message", "El usuario ya está identificado");
