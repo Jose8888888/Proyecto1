@@ -18,8 +18,6 @@ namespace Chat {
 
         private static IPHostEntry host = Dns.GetHostEntry("localhost");  
         private static IPAddress ipAddress = host.AddressList[0];  
-        private static IPEndPoint localEndPoint = new IPEndPoint(ipAddress, 1234);    
-        IPEndPoint remoteEP = new IPEndPoint(ipAddress, 1234);  
         private Socket cliente = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
 
         [Test]
@@ -32,19 +30,192 @@ namespace Chat {
             Thread.Sleep(2000);
 
             Socket cliente = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
-            cliente.Connect(remoteEP);
+            cliente.Connect(new IPEndPoint(ipAddress, 1234));
 
             Dictionary<string, string> json = new Dictionary<string, string>();
             json.Add("type", "PUBLIC_MESSAGE");
             json.Add("message", "hola mundo");
             String mensaje = JsonConvert.SerializeObject(json);
-
-            
             cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
             byte[] bytes = new byte[1024];
             cliente.Receive(bytes, 1024, 0);
             json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Parser.BytesACadena(bytes));
             Assert.IsTrue(json["type"] == "ERROR");
+
+        }
+
+        [Test]
+        //prueba que si se manda un mensaje incompleto se responde con un error
+        public void TestMensajeIncompleto() {
+            Servidor servidor = new Servidor("localhost", 1235);
+            Thread hilo = new Thread(servidor.Inicia);
+
+            hilo.Start();
+            Thread.Sleep(2000);
+
+            Socket cliente = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
+            cliente.Connect(new IPEndPoint(ipAddress, 1235));
+
+            Dictionary<string, string> json = new Dictionary<string, string>();
+            json.Add("type", "IDENTIFY");
+            String mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            byte[] bytes = new byte[1024];
+            cliente.Receive(bytes, 1024, 0);
+            json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Parser.BytesACadena(bytes));
+            Assert.IsTrue(json["type"] == "ERROR");
+
+            cliente = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
+            cliente.Connect(new IPEndPoint(ipAddress, 1235));
+            json.Clear();
+            json.Add("type", "IDENTIFY");
+            json.Add("username", "usuario");
+            mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json.Clear();
+            json.Add("type", "STATUS");
+            mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Parser.BytesACadena(bytes));
+            Assert.IsTrue(json["type"] == "ERROR");
+            json.Add("status", "hola mundo");
+            mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Parser.BytesACadena(bytes));
+            Assert.IsTrue(json["type"] == "ERROR");
+
+            cliente = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
+            cliente.Connect(new IPEndPoint(ipAddress, 1235));
+            json.Clear();
+            json.Add("type", "IDENTIFY");
+            json.Add("username", "usuario");
+            mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json.Clear();
+            json.Add("type", "MESSAGE");
+            mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Parser.BytesACadena(bytes));
+            Assert.IsTrue(json["type"] == "ERROR");
+
+            cliente = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
+            cliente.Connect(new IPEndPoint(ipAddress, 1235));
+            json.Clear();
+            json.Add("type", "IDENTIFY");
+            json.Add("username", "usuario");
+            mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json.Clear();
+            json.Add("type", "PUBLIC_MESSAGE");
+            mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Parser.BytesACadena(bytes));
+            Assert.IsTrue(json["type"] == "ERROR");
+
+            cliente = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
+            cliente.Connect(new IPEndPoint(ipAddress, 1235));
+            json.Clear();
+            json.Add("type", "IDENTIFY");
+            json.Add("username", "usuario");
+            mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json.Clear();
+            json.Add("type", "NEW_ROOM");
+            mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Parser.BytesACadena(bytes));
+            Assert.IsTrue(json["type"] == "ERROR");
+
+            cliente = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
+            cliente.Connect(new IPEndPoint(ipAddress, 1235));
+            json.Clear();
+            json.Add("type", "IDENTIFY");
+            json.Add("username", "usuario");
+            mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json.Clear();
+            json.Add("type", "INVITE");
+            mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Parser.BytesACadena(bytes));
+            Assert.IsTrue(json["type"] == "ERROR");
+
+            cliente = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
+            cliente.Connect(new IPEndPoint(ipAddress, 1235));
+            json.Clear();
+            json.Add("type", "IDENTIFY");
+            json.Add("username", "usuario");
+            mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json.Clear();
+            json.Add("type", "JOIN_ROOM");
+            mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Parser.BytesACadena(bytes));
+            Assert.IsTrue(json["type"] == "ERROR");
+
+            cliente = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
+            cliente.Connect(new IPEndPoint(ipAddress, 1235));
+            json.Clear();
+            json.Add("type", "IDENTIFY");
+            json.Add("username", "usuario");
+            mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json.Clear();
+            json.Add("type", "ROOM_USERS");
+            mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Parser.BytesACadena(bytes));
+            Assert.IsTrue(json["type"] == "ERROR");
+
+            cliente = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
+            cliente.Connect(new IPEndPoint(ipAddress, 1235));
+            json.Clear();
+            json.Add("type", "IDENTIFY");
+            json.Add("username", "usuario");
+            mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json.Clear();
+            json.Add("type", "ROOM_MESSAGE");
+            mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Parser.BytesACadena(bytes));
+            Assert.IsTrue(json["type"] == "ERROR");
+
+            cliente = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
+            cliente.Connect(new IPEndPoint(ipAddress, 1235));
+            json.Clear();
+            json.Add("type", "IDENTIFY");
+            json.Add("username", "usuario");
+            mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json.Clear();
+            json.Add("type", "LEAVE_ROOM");
+            mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Parser.BytesACadena(bytes));
+            Assert.IsTrue(json["type"] == "ERROR");
+
+            
 
         }
 

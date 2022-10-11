@@ -67,16 +67,18 @@ namespace Chat {
         public void Escucha(Socket cliente) {
             while(cliente.Connected) {
                 Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Recibe(cliente));
-                if (json != null && (json["type"] == "IDENTIFY" || usuarios[cliente].GetNombre() != null)) {
-                    AnalizaJson(json, cliente);
-                } else {
-                    json.Clear();
-                    json.Add("type", "ERROR");
-                    json.Add("message", "No te has identificado");
-                    String mensaje = JsonConvert.SerializeObject(json);
-                    Envia(cliente, Parser.CadenaABytes(mensaje));
-                    controlador.Error("Ocurrió un error con un cliente");
-                    DesconectaUsuario(usuarios[cliente]);
+                if (json != null) {
+                    if (json["type"] == "IDENTIFY" || usuarios[cliente].GetNombre() != null) {
+                        AnalizaJson(json, cliente);
+                    } else {
+                        json.Clear();
+                        json.Add("type", "ERROR");
+                        json.Add("message", "No te has identificado");
+                        String mensaje = JsonConvert.SerializeObject(json);
+                        Envia(cliente, Parser.CadenaABytes(mensaje));
+                        controlador.Error("Ocurrió un error con un cliente");
+                        DesconectaUsuario(usuarios[cliente]);
+                    }
                 }
             }
         }       
@@ -181,13 +183,24 @@ namespace Chat {
         //analiza un mensaje Json
         private void AnalizaJson(Dictionary<string, string> json, Socket cliente) {
             Dictionary<string, string> nuevoJson = new Dictionary<string, string>();
+            String mensaje;
+            Cuarto cuarto;
             switch(json["type"]) {
-                        case "IDENTIFY": 
-                            String mensaje = IdentificaUsuario(json["message"], usuarios[cliente]);
+                    case "IDENTIFY": 
+                        if (json.ContainsKey("username")) {
+                            mensaje = IdentificaUsuario(json["username"], usuarios[cliente]);
                             Envia(cliente, Parser.CadenaABytes(mensaje));  
-                            break;
+                        } else {
+                            nuevoJson.Add("type", "ERROR");
+                            nuevoJson.Add("message", "El mensaje está incompleto");
+                            mensaje = JsonConvert.SerializeObject(nuevoJson);
+                            Envia(cliente, Parser.CadenaABytes(mensaje));
+                            DesconectaUsuario(usuarios[cliente]);
+                        }
+                        break;
                         
-                        case "MESSAGE":
+                    case "MESSAGE":
+                        if (json.ContainsKey("username") && json.ContainsKey("message")) {
                             Usuario usuario = null;
                             foreach (Usuario u in usuarios.Values) {
                                 if (u.GetNombre() == json["username"]) {
@@ -202,32 +215,57 @@ namespace Chat {
                             } else {
                                 nuevoJson.Add("type", "WARNING");
                                 nuevoJson.Add("message", "El usuario '" + json["username"] + "' no existe");
+                                nuevoJson.Add("operation", "MESSAGE");
                                 mensaje = JsonConvert.SerializeObject(nuevoJson);
                                 Envia(cliente, Parser.CadenaABytes(mensaje));
                             }
-                            break;
+                        } else {
+                            nuevoJson.Add("type", "ERROR");
+                            nuevoJson.Add("message", "El mensaje está incompleto");
+                            mensaje = JsonConvert.SerializeObject(nuevoJson);
+                            Envia(cliente, Parser.CadenaABytes(mensaje));
+                            DesconectaUsuario(usuarios[cliente]);
+                        }
+                        break;
                         
-                        case "STATUS":
+                    case "STATUS":
+                        if (json.ContainsKey("status") && (json["status"] == "ACTIVE" || json["status"] == "AWAY" || json["status"] == "BUSY")) {
                             Usuario.Estado estado = (Usuario.Estado) Enum.Parse(typeof(Usuario.Estado), json["status"]);
                             
                             mensaje = CambiaEstado(usuarios[cliente], estado);
                             Envia(cliente, Parser.CadenaABytes(mensaje));
                             AvisaNuevoEstado(usuarios[cliente], json["status"]);
-                            break;
+                        } else {
+                            nuevoJson.Add("type", "ERROR");
+                            nuevoJson.Add("message", "El mensaje está incompleto");
+                            mensaje = JsonConvert.SerializeObject(nuevoJson);
+                            Envia(cliente, Parser.CadenaABytes(mensaje));
+                            DesconectaUsuario(usuarios[cliente]);
+                        }
+                        break;
+            
                         
                         case "USERS":
                             nuevoJson.Add("type", "USER_LIST");
                             nuevoJson.Add("usernames", Nombres());
                             mensaje = JsonConvert.SerializeObject(nuevoJson);
                             Envia(cliente, Parser.CadenaABytes(mensaje));
-                            break;
+                        break;
 
-                        case "PUBLIC_MESSAGE":
-                            
+                    case "PUBLIC_MESSAGE":
+                        if (json.ContainsKey("message")) {
                             EnviaMensaje(json["message"], usuarios[cliente]);
-                            break;
+                        } else {
+                            nuevoJson.Add("type", "ERROR");
+                            nuevoJson.Add("message", "El mensaje está incompleto");
+                            mensaje = JsonConvert.SerializeObject(nuevoJson);
+                            Envia(cliente, Parser.CadenaABytes(mensaje));
+                            DesconectaUsuario(usuarios[cliente]);
+                        }
+                        break;
 
-                        case "NEW_ROOM":
+                    case "NEW_ROOM":
+                        if (json.ContainsKey("roomname")) {
                             foreach (Cuarto c in cuartos) {
                                 if (c.GetNombre() == json["roomname"]) {
                                     nuevoJson.Add("type", "WARNING");
@@ -246,11 +284,18 @@ namespace Chat {
                                     mensaje = JsonConvert.SerializeObject(nuevoJson);
                                     Envia(cliente, Parser.CadenaABytes(mensaje));
                                 
-                            
-                            break;
+                        } else {
+                            nuevoJson.Add("type", "ERROR");
+                            nuevoJson.Add("message", "El mensaje está incompleto");
+                            mensaje = JsonConvert.SerializeObject(nuevoJson);
+                            Envia(cliente, Parser.CadenaABytes(mensaje));
+                            DesconectaUsuario(usuarios[cliente]);
+                        }
+                        break;
 
-                        case "INVITE":
-                            Cuarto cuarto = BuscaCuarto(json["roomname"]);
+                    case "INVITE":
+                        if (json.ContainsKey("username") && json.ContainsKey("roomname")) {
+                            cuarto = BuscaCuarto(json["roomname"]);
                             if (cuarto == null) {
                                 nuevoJson.Add("type", "WARNING");
                                 nuevoJson.Add("message", "El cuarto '" + json["roomname"] + "' no existe.");
@@ -301,10 +346,17 @@ namespace Chat {
                                 Envia(cliente, Parser.CadenaABytes(mensaje));
                                 break;
                             }
+                        } else {
+                            nuevoJson.Add("type", "ERROR");
+                            nuevoJson.Add("message", "El mensaje está incompleto");
+                            mensaje = JsonConvert.SerializeObject(nuevoJson);
+                            Envia(cliente, Parser.CadenaABytes(mensaje));
+                            DesconectaUsuario(usuarios[cliente]);
+                        }
+                        break;
 
-                            break;
-
-                        case "JOIN_ROOM":
+                    case "JOIN_ROOM":
+                        if (json.ContainsKey("roomname")) {
                             cuarto = BuscaCuarto(json["roomname"]);
                             if (cuarto == null) {
                                 nuevoJson.Add("type", "WARNING");
@@ -343,9 +395,17 @@ namespace Chat {
                                 Envia(cliente, Parser.CadenaABytes(mensaje));
                                 return;
                             }
-                            break;
+                        } else {
+                            nuevoJson.Add("type", "ERROR");
+                            nuevoJson.Add("message", "El mensaje está incompleto");
+                            mensaje = JsonConvert.SerializeObject(nuevoJson);
+                            Envia(cliente, Parser.CadenaABytes(mensaje));
+                            DesconectaUsuario(usuarios[cliente]);
+                        }
+                        break;
 
-                        case "ROOM_USERS":
+                    case "ROOM_USERS":
+                        if (json.ContainsKey("roomname")) {
                             cuarto = BuscaCuarto(json["roomname"]);
                             if (cuarto == null) {
                                 nuevoJson.Add("type", "WARNING");
@@ -368,10 +428,18 @@ namespace Chat {
                                 mensaje = JsonConvert.SerializeObject(nuevoJson);
                                 Envia(cliente, Parser.CadenaABytes(mensaje));
                             }
+                        } else {
+                            nuevoJson.Add("type", "ERROR");
+                            nuevoJson.Add("message", "El mensaje está incompleto");
+                            mensaje = JsonConvert.SerializeObject(nuevoJson);
+                            Envia(cliente, Parser.CadenaABytes(mensaje));
+                            DesconectaUsuario(usuarios[cliente]);
+                        }
 
-                            break;
+                        break;
 
-                        case "ROOM_MESSAGE":
+                    case "ROOM_MESSAGE":
+                        if (json.ContainsKey("roomname") && json.ContainsKey("message")) {
                             cuarto = BuscaCuarto(json["roomname"]);
                             if (cuarto == null) {
                                 nuevoJson.Add("type", "WARNING");
@@ -399,10 +467,17 @@ namespace Chat {
                                 mensaje = JsonConvert.SerializeObject(nuevoJson);
                                 Envia(cliente, Parser.CadenaABytes(mensaje));
                             }
+                        } else {
+                            nuevoJson.Add("type", "ERROR");
+                            nuevoJson.Add("message", "El mensaje está incompleto");
+                            mensaje = JsonConvert.SerializeObject(nuevoJson);
+                            Envia(cliente, Parser.CadenaABytes(mensaje));
+                            DesconectaUsuario(usuarios[cliente]);
+                        }
+                        break;
 
-                            break;
-
-                        case "LEAVE_ROOM":
+                    case "LEAVE_ROOM":
+                        if (json.ContainsKey("roomname")) {
                             cuarto = BuscaCuarto(json["roomname"]);
                             if (cuarto == null) {
                                 nuevoJson.Add("type", "WARNING");
@@ -435,7 +510,14 @@ namespace Chat {
                                 mensaje = JsonConvert.SerializeObject(nuevoJson);
                                 Envia(cliente, Parser.CadenaABytes(mensaje));
                             }
-                            break;
+                        } else {
+                            nuevoJson.Add("type", "ERROR");
+                            nuevoJson.Add("message", "El mensaje está incompleto");
+                            mensaje = JsonConvert.SerializeObject(nuevoJson);
+                            Envia(cliente, Parser.CadenaABytes(mensaje));
+                            DesconectaUsuario(usuarios[cliente]);
+                        }
+                        break;
 
                         case "DISCONNECT":
                             String nombreUsuario = usuarios[cliente].GetNombre();
@@ -458,6 +540,7 @@ namespace Chat {
                             foreach (Usuario u in usuarios.Values) {
                                      Envia(enchufes[u], Parser.CadenaABytes(mensaje));
                                 }
+                               
                             break;
                     }
         }

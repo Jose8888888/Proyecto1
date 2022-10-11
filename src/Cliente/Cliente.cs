@@ -96,7 +96,7 @@ namespace Chat {
 
             Dictionary<string, string> json = new Dictionary<string, string>();
             json.Add("type", "IDENTIFY");
-            json.Add("message", nombre);
+            json.Add("username", nombre);
             String mensaje = JsonConvert.SerializeObject(json);
 
             Envia(Parser.CadenaABytes(mensaje));
@@ -249,7 +249,7 @@ namespace Chat {
                             controlador.Mensaje(mensaje);
                             break;
                         case "WARNING":
-                            if (json.ContainsKey("operation") && json["operation"] == "ROOM_MESSAGE") {
+                            if (json.ContainsKey("operation") && (json["operation"] == "ROOM_MESSAGE" || json["operation"] == "MESSAGE")) {
                                 controlador.Error(json["message"]);
                             }
                             break;
