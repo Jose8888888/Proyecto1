@@ -76,7 +76,7 @@ namespace Chat {
                     String mensaje = JsonConvert.SerializeObject(json);
                     Envia(cliente, Parser.CadenaABytes(mensaje));
                     DesconectaUsuario(usuarios[cliente]);
-                    continue;
+                    return;
                 }
                 if (json != null) {
                     if (json["type"] == "IDENTIFY" || usuarios[cliente].GetNombre() != null) {
@@ -89,6 +89,7 @@ namespace Chat {
                         Envia(cliente, Parser.CadenaABytes(mensaje));
                         controlador.Error("Ocurrió un error con un cliente");
                         DesconectaUsuario(usuarios[cliente]);
+                        return;
                     }
                 } else {
                     json = new Dictionary<string, string>();
@@ -97,6 +98,7 @@ namespace Chat {
                     String mensaje = JsonConvert.SerializeObject(json);
                     Envia(cliente, Parser.CadenaABytes(mensaje));
                     DesconectaUsuario(usuarios[cliente]);
+                    return;
                 }
             }
         }       
@@ -180,7 +182,7 @@ namespace Chat {
                 lock(cliente)
                     cliente.Send(mensaje, 1024, 0);
             } catch(Exception) {
-                controlador.Error("Ocurrió un error al conectarse con el cliente");
+                controlador.Error("Ocurrió un error con un cliente");
                 cliente.Close();
             }
         }
@@ -191,7 +193,7 @@ namespace Chat {
             try {
                 cliente.Receive(bytes, 1024, 0);
             } catch(SocketException se) {
-                controlador.Error("Ocurrió un error al conectarse con el servidor " + se);
+                controlador.Error("Ocurrió un error con un cliente " + se);
                 DesconectaUsuario(usuarios[cliente]);
             }
 
@@ -312,7 +314,7 @@ namespace Chat {
                         break;
 
                     case "INVITE":
-                        if (json.ContainsKey("username") && json.ContainsKey("roomname")) {
+                        if (json.ContainsKey("usernames") && json.ContainsKey("roomname")) {
                             cuarto = BuscaCuarto(json["roomname"]);
                             if (cuarto == null) {
                                 nuevoJson.Add("type", "WARNING");
@@ -505,26 +507,13 @@ namespace Chat {
 
                                 Envia(cliente, Parser.CadenaABytes(mensaje));
                             } else if (usuarios[cliente].EstaEnCuarto(cuarto)) {
-                                cuarto.EliminaMiembro(usuarios[cliente]);
-                                usuarios[cliente].EliminaCuarto(cuarto);
+                                SacaDeCuarto(usuarios[cliente], cuarto);
 
                                 nuevoJson.Add("type", "INFO");
                                 nuevoJson.Add("message", "success");
                                 mensaje = JsonConvert.SerializeObject(nuevoJson);
                                 Envia(cliente, Parser.CadenaABytes(mensaje));
-
-                                nuevoJson.Clear();
-                                nuevoJson.Add("type", "LEFT_ROOM");
-                                nuevoJson.Add("roomname", json["roomname"]);
-                                nuevoJson.Add("username", usuarios[cliente].GetNombre());
-                                mensaje = JsonConvert.SerializeObject(nuevoJson);
-                                if(cuarto.GetMiembros().Any()) {
-                                    foreach (Usuario u in cuarto.GetMiembros()) {
-                                        Envia(enchufes[u], Parser.CadenaABytes(mensaje));
-                                    }
-                                } else {
-                                    cuartos.Remove(cuarto);
-                                }
+                                
                             } else {
                                 nuevoJson.Add("type", "WARNING");
                                 nuevoJson.Add("message", "El usuario no se ha unido al cuarto '" + json["roomname"] + "'");
@@ -642,13 +631,32 @@ namespace Chat {
         private void DesconectaUsuario(Usuario usuario) {
             enchufes[usuario].Close();
             foreach (Cuarto cuarto in cuartos) {
-                cuarto.EliminaMiembro(usuario);
+                if (usuario.EstaEnCuarto(cuarto)) {
+                    SacaDeCuarto(usuario, cuarto);
+                }
             }
             usuarios.Remove(enchufes[usuario]);
             enchufes.Remove(usuario);
             
         }
 
-    
+        //Saca a un usuario de un cuarto
+        private void SacaDeCuarto(Usuario usuario, Cuarto cuarto) {
+            cuarto.EliminaMiembro(usuario);
+            usuario.EliminaCuarto(cuarto);
+
+            Dictionary<string, string> json = new Dictionary<string, string>();
+            json.Add("type", "LEFT_ROOM");
+            json.Add("roomname", cuarto.GetNombre());
+            json.Add("username", usuario.GetNombre());
+            String mensaje = JsonConvert.SerializeObject(json);
+            if (cuarto.GetMiembros().Any()) {
+                foreach (Usuario u in cuarto.GetMiembros()) {
+                    Envia(enchufes[u], Parser.CadenaABytes(mensaje));
+                }
+            } else {
+                cuartos.Remove(cuarto);
+            }
+        }
     }
 }

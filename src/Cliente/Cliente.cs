@@ -265,6 +265,9 @@ namespace Chat {
                             enchufe.Close();
                             Environment.Exit(0);
                             break;
+                        case "JOINED_ROOM":
+                            controlador.Mensaje(json["username"] + " se unió al cuarto '" + json["roomname"] + "'");
+                            break;
                     }
         }
 
