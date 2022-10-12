@@ -66,7 +66,18 @@ namespace Chat {
         //recibe información del cliente
         public void Escucha(Socket cliente) {
             while(cliente.Connected) {
-                Dictionary<String, String> json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Recibe(cliente));
+                Dictionary<String, String> json;
+                try {
+                    json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Recibe(cliente));
+                } catch (Exception e) {
+                    json = new Dictionary<string, string>();
+                    json.Add("type", "ERROR");
+                    json.Add("message", "El mensaje no es válido");
+                    String mensaje = JsonConvert.SerializeObject(json);
+                    Envia(cliente, Parser.CadenaABytes(mensaje));
+                    DesconectaUsuario(usuarios[cliente]);
+                    continue;
+                }
                 if (json != null) {
                     if (json["type"] == "IDENTIFY" || usuarios[cliente].GetNombre() != null) {
                         AnalizaJson(json, cliente);
@@ -79,6 +90,13 @@ namespace Chat {
                         controlador.Error("Ocurrió un error con un cliente");
                         DesconectaUsuario(usuarios[cliente]);
                     }
+                } else {
+                    json = new Dictionary<string, string>();
+                    json.Add("type", "ERROR");
+                    json.Add("message", "El mensaje no es válido");
+                    String mensaje = JsonConvert.SerializeObject(json);
+                    Envia(cliente, Parser.CadenaABytes(mensaje));
+                    DesconectaUsuario(usuarios[cliente]);
                 }
             }
         }       
@@ -545,6 +563,14 @@ namespace Chat {
                                      Envia(enchufes[u], Parser.CadenaABytes(mensaje));
                                 }
                                
+                            break;
+
+                        default:
+                            nuevoJson.Add("type", "ERROR");
+                            nuevoJson.Add("message", "El mensaje no es válido");
+                            mensaje = JsonConvert.SerializeObject(nuevoJson);
+                            Envia(cliente, Parser.CadenaABytes(mensaje));
+                            DesconectaUsuario(usuarios[cliente]);
                             break;
                     }
         }
