@@ -12,6 +12,7 @@ namespace Chat {
 
         //los estados en los que puede estar un usuario
         public enum Estado {
+        NINGUNO,
         ACTIVE,
         AWAY,
         BUSY

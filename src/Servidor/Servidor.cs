@@ -252,7 +252,7 @@ namespace Chat {
                             
                             mensaje = CambiaEstado(usuarios[cliente], estado);
                             Envia(cliente, Parser.CadenaABytes(mensaje));
-                            AvisaNuevoEstado(usuarios[cliente], json["status"]);
+                            
                         } else {
                             nuevoJson.Add("type", "ERROR");
                             nuevoJson.Add("message", "El mensaje está incompleto");
@@ -595,6 +595,7 @@ namespace Chat {
                 usuario.SetEstado(estado);
                 json.Add("type", "INFO");
                 json.Add("message", "success");
+                AvisaNuevoEstado(usuario, Enum.GetName(typeof(Usuario.Estado), estado));
                 return JsonConvert.SerializeObject(json);
             } else {
                 json.Add("type", "WARNING");
