@@ -500,8 +500,12 @@ namespace Chat {
                                 nuevoJson.Add("roomname", json["roomname"]);
                                 nuevoJson.Add("username", usuarios[cliente].GetNombre());
                                 mensaje = JsonConvert.SerializeObject(nuevoJson);
-                                foreach (Usuario u in cuarto.GetMiembros()) {
-                                    Envia(enchufes[u], Parser.CadenaABytes(mensaje));
+                                if(cuarto.GetMiembros().Any()) {
+                                    foreach (Usuario u in cuarto.GetMiembros()) {
+                                        Envia(enchufes[u], Parser.CadenaABytes(mensaje));
+                                    }
+                                } else {
+                                    cuartos.Remove(cuarto);
                                 }
                             } else {
                                 nuevoJson.Add("type", "WARNING");
@@ -617,5 +621,7 @@ namespace Chat {
             enchufes.Remove(usuario);
             
         }
+
+    
     }
 }
