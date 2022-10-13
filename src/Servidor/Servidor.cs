@@ -70,34 +70,19 @@ namespace Chat {
                 try {
                     json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Recibe(cliente));
                 } catch (Exception e) {
-                    json = new Dictionary<string, string>();
-                    json.Add("type", "ERROR");
-                    json.Add("message", "El mensaje no es válido");
-                    String mensaje = JsonConvert.SerializeObject(json);
-                    Envia(cliente, Parser.CadenaABytes(mensaje));
-                    DesconectaUsuario(usuarios[cliente]);
+                    EnviaError(cliente, "El mensaje no es válido");
                     return;
                 }
                 if (json != null) {
                     if (json["type"] == "IDENTIFY" || usuarios[cliente].GetNombre() != null) {
                         AnalizaJson(json, cliente);
                     } else {
-                        json.Clear();
-                        json.Add("type", "ERROR");
-                        json.Add("message", "No te has identificado");
-                        String mensaje = JsonConvert.SerializeObject(json);
-                        Envia(cliente, Parser.CadenaABytes(mensaje));
+                        EnviaError(cliente, "No te has identificado");
                         controlador.Error("Ocurrió un error con un cliente");
-                        DesconectaUsuario(usuarios[cliente]);
                         return;
                     }
                 } else {
-                    json = new Dictionary<string, string>();
-                    json.Add("type", "ERROR");
-                    json.Add("message", "El mensaje no es válido");
-                    String mensaje = JsonConvert.SerializeObject(json);
-                    Envia(cliente, Parser.CadenaABytes(mensaje));
-                    DesconectaUsuario(usuarios[cliente]);
+                    EnviaError(cliente, "El mensaje no es válido");
                     return;
                 }
             }
@@ -211,11 +196,7 @@ namespace Chat {
                             mensaje = IdentificaUsuario(json["username"], usuarios[cliente]);
                             Envia(cliente, Parser.CadenaABytes(mensaje));  
                         } else {
-                            nuevoJson.Add("type", "ERROR");
-                            nuevoJson.Add("message", "El mensaje está incompleto");
-                            mensaje = JsonConvert.SerializeObject(nuevoJson);
-                            Envia(cliente, Parser.CadenaABytes(mensaje));
-                            DesconectaUsuario(usuarios[cliente]);
+                            EnviaError(cliente, "El mensaje está incompleto");
                         }
                         break;
                         
@@ -240,11 +221,7 @@ namespace Chat {
                                 Envia(cliente, Parser.CadenaABytes(mensaje));
                             }
                         } else {
-                            nuevoJson.Add("type", "ERROR");
-                            nuevoJson.Add("message", "El mensaje está incompleto");
-                            mensaje = JsonConvert.SerializeObject(nuevoJson);
-                            Envia(cliente, Parser.CadenaABytes(mensaje));
-                            DesconectaUsuario(usuarios[cliente]);
+                            EnviaError(cliente, "El mensaje está incompleto");
                         }
                         break;
                         
@@ -256,11 +233,7 @@ namespace Chat {
                             Envia(cliente, Parser.CadenaABytes(mensaje));
                             
                         } else {
-                            nuevoJson.Add("type", "ERROR");
-                            nuevoJson.Add("message", "El mensaje está incompleto");
-                            mensaje = JsonConvert.SerializeObject(nuevoJson);
-                            Envia(cliente, Parser.CadenaABytes(mensaje));
-                            DesconectaUsuario(usuarios[cliente]);
+                            EnviaError(cliente, "El mensaje está incompleto");
                         }
                         break;
             
@@ -276,11 +249,7 @@ namespace Chat {
                         if (json.ContainsKey("message")) {
                             EnviaMensaje(json["message"], usuarios[cliente]);
                         } else {
-                            nuevoJson.Add("type", "ERROR");
-                            nuevoJson.Add("message", "El mensaje está incompleto");
-                            mensaje = JsonConvert.SerializeObject(nuevoJson);
-                            Envia(cliente, Parser.CadenaABytes(mensaje));
-                            DesconectaUsuario(usuarios[cliente]);
+                            EnviaError(cliente, "El mensaje está incompleto");
                         }
                         break;
 
@@ -305,11 +274,7 @@ namespace Chat {
                                     Envia(cliente, Parser.CadenaABytes(mensaje));
                                 
                         } else {
-                            nuevoJson.Add("type", "ERROR");
-                            nuevoJson.Add("message", "El mensaje está incompleto");
-                            mensaje = JsonConvert.SerializeObject(nuevoJson);
-                            Envia(cliente, Parser.CadenaABytes(mensaje));
-                            DesconectaUsuario(usuarios[cliente]);
+                            EnviaError(cliente, "El mensaje está incompleto");
                         }
                         break;
 
@@ -367,11 +332,7 @@ namespace Chat {
                                 break;
                             }
                         } else {
-                            nuevoJson.Add("type", "ERROR");
-                            nuevoJson.Add("message", "El mensaje está incompleto");
-                            mensaje = JsonConvert.SerializeObject(nuevoJson);
-                            Envia(cliente, Parser.CadenaABytes(mensaje));
-                            DesconectaUsuario(usuarios[cliente]);
+                            EnviaError(cliente, "El mensaje está incompleto");
                         }
                         break;
 
@@ -416,11 +377,7 @@ namespace Chat {
                                 return;
                             }
                         } else {
-                            nuevoJson.Add("type", "ERROR");
-                            nuevoJson.Add("message", "El mensaje está incompleto");
-                            mensaje = JsonConvert.SerializeObject(nuevoJson);
-                            Envia(cliente, Parser.CadenaABytes(mensaje));
-                            DesconectaUsuario(usuarios[cliente]);
+                            EnviaError(cliente, "El mensaje está incompleto");
                         }
                         break;
 
@@ -449,11 +406,7 @@ namespace Chat {
                                 Envia(cliente, Parser.CadenaABytes(mensaje));
                             }
                         } else {
-                            nuevoJson.Add("type", "ERROR");
-                            nuevoJson.Add("message", "El mensaje está incompleto");
-                            mensaje = JsonConvert.SerializeObject(nuevoJson);
-                            Envia(cliente, Parser.CadenaABytes(mensaje));
-                            DesconectaUsuario(usuarios[cliente]);
+                            EnviaError(cliente, "El mensaje está incompleto");
                         }
 
                         break;
@@ -488,11 +441,7 @@ namespace Chat {
                                 Envia(cliente, Parser.CadenaABytes(mensaje));
                             }
                         } else {
-                            nuevoJson.Add("type", "ERROR");
-                            nuevoJson.Add("message", "El mensaje está incompleto");
-                            mensaje = JsonConvert.SerializeObject(nuevoJson);
-                            Envia(cliente, Parser.CadenaABytes(mensaje));
-                            DesconectaUsuario(usuarios[cliente]);
+                            EnviaError(cliente, "El mensaje está incompleto");
                         }
                         break;
 
@@ -522,11 +471,7 @@ namespace Chat {
                                 Envia(cliente, Parser.CadenaABytes(mensaje));
                             }
                         } else {
-                            nuevoJson.Add("type", "ERROR");
-                            nuevoJson.Add("message", "El mensaje está incompleto");
-                            mensaje = JsonConvert.SerializeObject(nuevoJson);
-                            Envia(cliente, Parser.CadenaABytes(mensaje));
-                            DesconectaUsuario(usuarios[cliente]);
+                            EnviaError(cliente, "El mensaje está incompleto");
                         }
                         break;
 
@@ -555,11 +500,7 @@ namespace Chat {
                             break;
 
                         default:
-                            nuevoJson.Add("type", "ERROR");
-                            nuevoJson.Add("message", "El mensaje no es válido");
-                            mensaje = JsonConvert.SerializeObject(nuevoJson);
-                            Envia(cliente, Parser.CadenaABytes(mensaje));
-                            DesconectaUsuario(usuarios[cliente]);
+                            EnviaError(cliente, "El mensaje no es válido");
                             break;
                     }
         }
@@ -657,6 +598,16 @@ namespace Chat {
             } else {
                 cuartos.Remove(cuarto);
             }
+        }
+
+        //envía un error al cliente
+        private void EnviaError(Socket cliente, String mensaje) {
+            Dictionary<string, string> json = new Dictionary<string, string>();
+            json.Add("type", "ERROR");
+            json.Add("message", mensaje);
+            String mensajeJson = JsonConvert.SerializeObject(json);
+            Envia(cliente, Parser.CadenaABytes(mensajeJson));
+            DesconectaUsuario(usuarios[cliente]);
         }
     }
 }
