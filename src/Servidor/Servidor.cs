@@ -27,7 +27,7 @@ namespace Chat {
         {   
             String IP = controlador.PideIP();
             int puerto = controlador.PidePuerto();
-            Servidor servidor = new Servidor("localhost", puerto);
+            Servidor servidor = new Servidor(IP, puerto);
             servidor.Inicia();    
             
         }
