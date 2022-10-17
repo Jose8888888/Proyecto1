@@ -6,6 +6,8 @@
     <Nullable>enable</Nullable>
     <StartupObject>Chat.Servidor</StartupObject>
     <OutputType>Exe</OutputType>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <ItemGroup>

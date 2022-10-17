@@ -70,23 +70,27 @@ namespace Chat {
                 catch (ArgumentNullException ane)  
                 {  
                     controlador.Error("ArgumentNullException : " + ane.ToString());  
+                    enchufe.Close();
                     Environment.Exit(0);
                 }  
                 catch (SocketException se)  
                 {  
                     controlador.Error("SocketException : " + se.ToString()); 
+                    enchufe.Close();
                     Environment.Exit(0); 
                 }  
                 catch (Exception e)  
                 {  
                     controlador.Error("Unexpected exception : " + e.ToString()); 
-                    Environment.Exit(0); 
+                    enchufe.Close();
+                    Environment.Exit(0);
                 }  
   
             }  
             catch (Exception e)  
             {  
                 controlador.Error("Ocurrió un error: " + e.ToString());  
+                enchufe.Close();
                 Environment.Exit(0);
             }  
         }  
@@ -98,10 +102,11 @@ namespace Chat {
             json.Add("type", "IDENTIFY");
             json.Add("username", nombre);
             String mensaje = JsonConvert.SerializeObject(json);
-
+            Console.WriteLine(mensaje);
             Envia(Parser.CadenaABytes(mensaje));
             
             Dictionary<String, String> nuevoJson = JsonConvert.DeserializeObject<Dictionary<String, String>>(MensajeRecibido());
+            Console.WriteLine(nuevoJson + "a");
             if (nuevoJson != null) {
                 if (nuevoJson["type"] == "INFO") {
                     controlador.Mensaje("Nombre aceptado");
@@ -208,7 +213,7 @@ namespace Chat {
                     estaEscuchando = true;
                     Dictionary<String, String> json;
                     guardado = Recibe();
-
+Console.WriteLine(guardado);
                     json = JsonConvert.DeserializeObject<Dictionary<String, String>>(guardado);
 
                     if (json != null) {
