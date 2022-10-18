@@ -102,7 +102,7 @@ namespace Chat {
             json.Add("type", "IDENTIFY");
             json.Add("username", nombre);
             String mensaje = JsonConvert.SerializeObject(json);
-            Envia(Parser.CadenaABytes(mensaje));
+            Envia(Parser.CadenaABytes(mensaje + "\n"));
             
             Dictionary<String, String> nuevoJson = JsonConvert.DeserializeObject<Dictionary<String, String>>(MensajeRecibido());
             if (nuevoJson != null) {
@@ -183,6 +183,8 @@ namespace Chat {
         private void Envia(byte[] mensaje) {
             try {
                 enchufe.Send(mensaje, 1024, 0);
+                
+
             } catch(SocketException se) {
                 controlador.Error("Ocurrió un error al conectarse con el servidor " + se);
                 enchufe.Close();
