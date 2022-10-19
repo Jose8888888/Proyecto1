@@ -39,6 +39,7 @@ namespace Chat {
             cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
             byte[] bytes = new byte[1024];
             cliente.Receive(bytes, 1024, 0);
+            
             json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Parser.BytesACadena(bytes));
             Assert.IsTrue(json["type"] == "ERROR");
 
@@ -255,6 +256,24 @@ namespace Chat {
             cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
             cliente.Receive(bytes, 1024, 0);
             mensaje = "hola mundo";
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Parser.BytesACadena(bytes));
+            Assert.IsTrue(json["type"] == "ERROR");
+
+            cliente = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
+            cliente.Connect(new IPEndPoint(ipAddress, 1235));
+            json.Clear();
+            json.Add("type", "IDENTIFY");
+            json.Add("username", "usuario");
+            mensaje = JsonConvert.SerializeObject(json);
+            cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
+            cliente.Receive(bytes, 1024, 0);
+            json.Clear();
+            json.Add("type", "INVITE");
+            json.Add("roomname", "cuarto");
+            json.Add("usernames", "usuarios");
+            mensaje = JsonConvert.SerializeObject(json);
             cliente.Send(Parser.CadenaABytes(mensaje), 1024, 0);
             cliente.Receive(bytes, 1024, 0);
             json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Parser.BytesACadena(bytes));

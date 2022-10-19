@@ -13,6 +13,8 @@ using System.Threading;
 namespace Chat {
     public class Servidor  
     {  
+        #pragma warning disable CS8600
+        #pragma warning disable CS8618
         private static IPHostEntry host;
         private static IPAddress ipAddress; 
         private static IPEndPoint localEndPoint;  
@@ -69,7 +71,7 @@ namespace Chat {
                 Dictionary<String, String> json;
                 try {
                     json = JsonConvert.DeserializeObject<Dictionary<String, String>>(Recibe(cliente));
-                } catch (Exception e) {
+                } catch (Exception) {
                     EnviaError(cliente, "El mensaje no es válido");
                     return;
                 }
@@ -122,7 +124,7 @@ namespace Chat {
             Socket cliente;
             try {
                 cliente = servidor.Accept();  
-            } catch(SocketException se) {
+            } catch(SocketException) {
                 controlador.Error("Ocurrió un error con el cliente");
                 ConectaCliente();
                 return;
@@ -280,6 +282,13 @@ namespace Chat {
 
                     case "INVITE":
                         if (json.ContainsKey("usernames") && json.ContainsKey("roomname")) {
+                            List<string> nombres;
+                            try {
+                                nombres = JsonConvert.DeserializeObject<List<string>>(json["usernames"]);
+                            } catch (Newtonsoft.Json.JsonReaderException) {
+                                EnviaError(cliente, "El mensaje no es válido");
+                                return;
+                            }
                             cuarto = BuscaCuarto(json["roomname"]);
                             if (cuarto == null) {
                                 nuevoJson.Add("type", "WARNING");
@@ -289,7 +298,7 @@ namespace Chat {
                                 break;
                             } else if (usuarios[cliente].EstaEnCuarto(cuarto)) {
                                 List<Usuario> invitados = new List<Usuario>();
-                                List<string> nombres = JsonConvert.DeserializeObject<List<string>>(json["usernames"]);
+                                
                                 int numInvitados = 0;
                                 foreach (String nombre in nombres) {
                                     foreach (Usuario u in usuarios.Values) {
@@ -307,6 +316,7 @@ namespace Chat {
                                     }
                                     numInvitados++;
                                 }
+                            
                             
 
                                 nuevoJson.Add("type", "INFO");
@@ -331,6 +341,7 @@ namespace Chat {
                                 Envia(cliente, Parser.CadenaABytes(mensaje));
                                 break;
                             }
+                            
                         } else {
                             EnviaError(cliente, "El mensaje está incompleto");
                         }

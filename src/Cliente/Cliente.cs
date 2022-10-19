@@ -11,11 +11,12 @@ using System.Threading;
 namespace Chat {
     public class Cliente  
     {  
-        private static IPHostEntry host;  
-        private static IPAddress ipAddress;  
+        #pragma warning disable CS8600
+        private static IPHostEntry host = new IPHostEntry();  
+        private static IPAddress ipAddress = new IPAddress(new byte[]{0});  
         private IPEndPoint remoteEP;  
   
-        private static Socket enchufe;  
+        private static Socket enchufe = new Socket(new SafeSocketHandle());  
         private ControladorVista controlador;
         private String guardado = "";
         private bool puedeEscuchar = true;
@@ -61,8 +62,8 @@ namespace Chat {
                 {  
                     enchufe.Connect(remoteEP);  
   
-                    controlador.Mensaje("Enchufe conectado a " +  
-                    enchufe.RemoteEndPoint.ToString());  
+                    if (enchufe.RemoteEndPoint != null)
+                        controlador.Mensaje("Enchufe conectado a " + enchufe.RemoteEndPoint.ToString());  
   
                 
   
@@ -183,6 +184,7 @@ namespace Chat {
         private void Envia(byte[] mensaje) {
             try {
                 enchufe.Send(mensaje, 1024, 0);
+                
                 
 
             } catch(SocketException se) {
