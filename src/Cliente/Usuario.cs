@@ -18,6 +18,7 @@ namespace Chat {
         BUSY
         }
 
+        #pragma warning disable CS8625
         private String nombre = null;
         private Estado estado;
         byte[] bytes = new byte[2048]; 

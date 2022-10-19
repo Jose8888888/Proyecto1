@@ -3,6 +3,10 @@ using System;
   namespace Chat {
     public class Vista  
     {  
+
+      
+      #pragma warning disable CS8600
+      #pragma warning disable CS8618
       private ControladorCliente controlador;
 
 
@@ -15,7 +19,8 @@ using System;
       public void PideNombre() {
           Console.WriteLine("Escribe tu nombre de usuario: ");
           String linea = Console.ReadLine();
-          controlador.RecibeNombre(linea);
+          if (linea != null)
+            controlador.RecibeNombre(linea);
       }
 
         //muestra un mensaje en la terminal
@@ -30,18 +35,29 @@ using System;
         
         //espera a que el usuario escriba algo en la terminal
         public String Escucha() {
-            return Console.ReadLine();
+          String cadena = Console.ReadLine();
+          if (cadena != null)
+            return cadena;
+          return "";
+
         }
 
         //pide la IP
         public String PideIP() {
           Console.WriteLine("Escribe la IP: ");
-          return Console.ReadLine();
+          String IP = Console.ReadLine();
+          if (IP != null)
+            return IP;
+          return "";
         }
 
         //pide el puerto
         public int PidePuerto() {
           Console.WriteLine("Escribe el puerto: ");
-          return int.Parse(Console.ReadLine());        }
+          String puerto = Console.ReadLine();
+          if (puerto != null)
+            return int.Parse(puerto);        
+          return 0;
+        }
     }
   }

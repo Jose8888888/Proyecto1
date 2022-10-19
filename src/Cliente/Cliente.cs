@@ -12,11 +12,12 @@ namespace Chat {
     public class Cliente  
     {  
         #pragma warning disable CS8600
-        private static IPHostEntry host = new IPHostEntry();  
-        private static IPAddress ipAddress = new IPAddress(new byte[]{0});  
+        #pragma warning disable CS8618
+        private static IPHostEntry host;  
+        private static IPAddress ipAddress;  
         private IPEndPoint remoteEP;  
   
-        private static Socket enchufe = new Socket(new SafeSocketHandle());  
+        private static Socket enchufe;  
         private ControladorVista controlador;
         private String guardado = "";
         private bool puedeEscuchar = true;

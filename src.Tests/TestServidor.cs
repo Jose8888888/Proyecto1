@@ -15,7 +15,8 @@ namespace Chat {
     [TestFixture]
     public class TestServidor  
     {  
-
+        #pragma warning disable CS8600
+        #pragma warning disable CS8602
         private static IPHostEntry host = Dns.GetHostEntry("localhost");  
         private static IPAddress ipAddress = host.AddressList[0];  
         private Socket cliente = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 

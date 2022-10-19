@@ -5,6 +5,7 @@ using System;
     //clase que conecta al cliente y al servidor con la vista
     public  class ControladorVista  
     {  
+      #pragma warning disable CS8618
         private Vista vista;
         private ControladorCliente controlador;
 

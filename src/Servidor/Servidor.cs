@@ -300,21 +300,23 @@ namespace Chat {
                                 List<Usuario> invitados = new List<Usuario>();
                                 
                                 int numInvitados = 0;
-                                foreach (String nombre in nombres) {
-                                    foreach (Usuario u in usuarios.Values) {
-                                        if (u.GetNombre() == nombre) {
-                                            invitados.Add(u);
-                                            break;
+                                if (nombres != null) {
+                                    foreach (String nombre in nombres) {
+                                        foreach (Usuario u in usuarios.Values) {
+                                            if (u.GetNombre() == nombre) {
+                                                invitados.Add(u);
+                                                break;
+                                            }
                                         }
+                                        if (invitados.Count == numInvitados) {
+                                            nuevoJson.Add("type", "WARNING");
+                                            nuevoJson.Add("message", "El usuario " + nombre + " no existe.");
+                                            mensaje = JsonConvert.SerializeObject(nuevoJson);
+                                            Envia(cliente, Parser.CadenaABytes(mensaje));
+                                            return;
+                                        }
+                                        numInvitados++;
                                     }
-                                    if (invitados.Count == numInvitados) {
-                                        nuevoJson.Add("type", "WARNING");
-                                        nuevoJson.Add("message", "El usuario " + nombre + " no existe.");
-                                        mensaje = JsonConvert.SerializeObject(nuevoJson);
-                                        Envia(cliente, Parser.CadenaABytes(mensaje));
-                                        return;
-                                    }
-                                    numInvitados++;
                                 }
                             
                             
@@ -536,7 +538,9 @@ namespace Chat {
                 usuario.SetEstado(estado);
                 json.Add("type", "INFO");
                 json.Add("message", "success");
-                AvisaNuevoEstado(usuario, Enum.GetName(typeof(Usuario.Estado), estado));
+                String nombreEstado = Enum.GetName(typeof(Usuario.Estado), estado);
+                if (nombreEstado != null)
+                    AvisaNuevoEstado(usuario, nombreEstado);
                 return JsonConvert.SerializeObject(json);
             } else {
                 json.Add("type", "WARNING");
@@ -576,7 +580,9 @@ namespace Chat {
                     cuarto = c;
                 }
             }
+            #pragma warning disable CS8603
             return cuarto;
+            #pragma warning restore CS8603
         }
 
         //desconecta a un usuario
