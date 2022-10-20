@@ -69,29 +69,29 @@ namespace Chat {
                 
   
                 }  
-                catch (ArgumentNullException ane)  
+                catch (ArgumentNullException)  
                 {  
-                    controlador.Error("ArgumentNullException : " + ane.ToString());  
+                    controlador.Error("ArgumentNullException");  
                     enchufe.Close();
                     Environment.Exit(0);
                 }  
-                catch (SocketException se)  
+                catch (SocketException)  
                 {  
-                    controlador.Error("SocketException : " + se.ToString()); 
+                    controlador.Error("SocketException"); 
                     enchufe.Close();
                     Environment.Exit(0); 
                 }  
-                catch (Exception e)  
+                catch (Exception)  
                 {  
-                    controlador.Error("Unexpected exception : " + e.ToString()); 
+                    controlador.Error("Unexpected exception"); 
                     enchufe.Close();
                     Environment.Exit(0);
                 }  
   
             }  
-            catch (Exception e)  
+            catch (Exception)  
             {  
-                controlador.Error("Ocurrió un error: " + e.ToString());  
+                controlador.Error("Ocurrió un error");  
                 enchufe.Close();
                 Environment.Exit(0);
             }  

@@ -27,9 +27,7 @@ namespace Chat {
   	        
         public static void Main()
         {   
-            String IP = controlador.PideIP();
-            int puerto = controlador.PidePuerto();
-            Servidor servidor = new Servidor(IP, puerto);
+            Servidor servidor = new Servidor("localhost", 1234);
             servidor.Inicia();    
             
         }
@@ -55,9 +53,9 @@ namespace Chat {
 
                 
             }  
-            catch (Exception e)  
+            catch (Exception)  
             {  
-                controlador.Error("Ocurrió un error: " + e.ToString());  
+                controlador.Error("Ocurrió un error");  
                 Environment.Exit(0);
             }  
 
