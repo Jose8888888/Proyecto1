@@ -586,6 +586,7 @@ namespace Chat {
         //desconecta a un usuario
         private void DesconectaUsuario(Usuario usuario) {
             enchufes[usuario].Close();
+            List<Cuarto> cuartos = new List<Cuarto>(this.cuartos);
             foreach (Cuarto cuarto in cuartos) {
                 if (usuario.EstaEnCuarto(cuarto)) {
                     SacaDeCuarto(usuario, cuarto);
