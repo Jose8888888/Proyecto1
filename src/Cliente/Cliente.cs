@@ -214,9 +214,15 @@ namespace Chat {
             while(true) {
                 if (puedeEscuchar) {
                     estaEscuchando = true;
-                    Dictionary<String, String> json;
+                    Dictionary<String, String> json = new Dictionary<string, string>();
                     guardado = Recibe();
-                    json = JsonConvert.DeserializeObject<Dictionary<String, String>>(guardado);
+                    try {
+                        json = JsonConvert.DeserializeObject<Dictionary<String, String>>(guardado);
+                    } catch (Newtonsoft.Json.JsonReaderException) {
+                        controlador.Error("El mensaje recibido no es válido");
+                        enchufe.Close();
+                        Environment.Exit(0);
+                    }
 
                     if (json != null) {
                         AnalizaJson(json);
@@ -241,6 +247,8 @@ namespace Chat {
                             controlador.Mensaje(mensaje);
                         } else {
                             controlador.Error("El mensaje recibido está incompleto");
+                            enchufe.Close();
+                            Environment.Exit(0);
                         }
                             break;
 
@@ -249,16 +257,18 @@ namespace Chat {
                             controlador.Mensaje(json["username"] + " ha entrado al chat.");
                         } else {
                             controlador.Error("El mensaje recibido está incompleto");
+                            enchufe.Close();
+                            Environment.Exit(0);
                         }
                         break;
 
                     case "NEW_STATUS":
                         if (json.ContainsKey("username") && json.ContainsKey("status")) {
-                            foreach(String s in json.Keys)
-                            Console.WriteLine(s);
                                 controlador.Mensaje(json["username"] + " cambió su estado a " + json["status"]);
                         } else {
                             controlador.Error("El mensaje recibido está incompleto");
+                            enchufe.Close();
+                            Environment.Exit(0);
                         }
                         break;
 
@@ -268,6 +278,8 @@ namespace Chat {
                             controlador.Mensaje(mensaje);
                         } else {
                             controlador.Error("El mensaje recibido está incompleto");
+                            enchufe.Close();
+                            Environment.Exit(0);
                         }
                         break;
                         
@@ -276,6 +288,8 @@ namespace Chat {
                             controlador.Mensaje(json["message"]);
                         } else {
                             controlador.Error("El mensaje recibido está incompleto");
+                            enchufe.Close();
+                            Environment.Exit(0);
                         }
                         break;
 
@@ -285,6 +299,8 @@ namespace Chat {
                             controlador.Mensaje(mensaje);
                         } else {
                             controlador.Error("El mensaje recibido está incompleto");
+                            enchufe.Close();
+                            Environment.Exit(0);
                     }
 
                             break;
@@ -300,6 +316,8 @@ namespace Chat {
                             controlador.Mensaje(mensaje);
                         } else {
                             controlador.Error("El mensaje recibido está incompleto");
+                            enchufe.Close();
+                            Environment.Exit(0);
                         }
                         break;
 
@@ -308,6 +326,8 @@ namespace Chat {
                             controlador.Mensaje(json["username"] + " se desconectó del chat");
                         } else {
                             controlador.Error("El mensaje recibido está incompleto");
+                            enchufe.Close();
+                            Environment.Exit(0);
                         }
                         break;
 
@@ -324,6 +344,17 @@ namespace Chat {
                             controlador.Mensaje(json["username"] + " se unió al cuarto '" + json["roomname"] + "'");
                         } else {
                             controlador.Error("El mensaje recibido está incompleto");
+                            enchufe.Close();
+                            Environment.Exit(0);
+                        }
+                        break;
+
+                    default:
+                        if (json["type"] != "INFO" && json["type"] != "WARNING" && json["type"] != "ERROR" 
+                        && json["type"] != "USER_LIST" && json["type"] != "ROOM_USER_LIST") {
+                            controlador.Error("El mensaje recibido no es válido");
+                            enchufe.Close();
+                            Environment.Exit(0);
                         }
                         break;
 
@@ -368,7 +399,15 @@ namespace Chat {
                         Envia(Parser.CadenaABytes(mensaje));
                         json = JsonConvert.DeserializeObject<Dictionary<String, String>>(MensajeRecibido());
                             if (json != null) {
-                                controlador.Mensaje(json["usernames"]);
+                                List<string> nombres;
+                                try {
+                                    nombres = JsonConvert.DeserializeObject<List<string>>(json["usernames"]);
+                                    controlador.Mensaje(json["usernames"]);
+                                } catch (Newtonsoft.Json.JsonReaderException) {
+                                    controlador.Error("El mensaje recibido no es válido");
+                                    enchufe.Close();
+                                    Environment.Exit(0);
+                                }
                             } else {
                                 controlador.Error("Ocurrió un error con el servidor");
                                 enchufe.Close();
@@ -384,7 +423,16 @@ namespace Chat {
                         json = JsonConvert.DeserializeObject<Dictionary<String, String>>(MensajeRecibido());
                         if (json != null) {
                             if (json["type"] == "ROOM_USER_LIST") {
-                                controlador.Mensaje(json["usernames"]);
+                                
+                                List<string> nombres;
+                                try {
+                                    nombres = JsonConvert.DeserializeObject<List<string>>(json["usernames"]);
+                                    controlador.Mensaje(json["usernames"]);
+                                } catch (Newtonsoft.Json.JsonReaderException) {
+                                    controlador.Error("El mensaje recibido no es válido");
+                                    enchufe.Close();
+                                    Environment.Exit(0);
+                                }
                                 
                             } else if (json["type"] == "WARNING"){
                                 controlador.Mensaje("Error: " + json["message"]);
