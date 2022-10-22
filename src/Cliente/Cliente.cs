@@ -200,7 +200,6 @@ namespace Chat {
             byte[] bytes = new byte[1024];
             try {
                     enchufe.Receive(bytes, 1024, 0);
-                    Console.WriteLine(Parser.BytesACadena(bytes));
             } catch(SocketException se) {
                 controlador.Error("Ocurrió un error al conectarse con el servidor " + se);
                 enchufe.Close();
@@ -234,48 +233,100 @@ namespace Chat {
 
         //analiza un mensaje Json
         private void AnalizaJson(Dictionary<string, string> json) {
+            String mensaje;
             switch(json["type"]) {
-                        case "MESSAGE_FROM": 
-                            String mensaje = "(" + json["username"] + "): " + json["message"];
+                    case "MESSAGE_FROM": 
+                        if (json.ContainsKey("username") && json.ContainsKey("message")) {
+                            mensaje = "(" + json["username"] + "): " + json["message"];
                             controlador.Mensaje(mensaje);
+                        } else {
+                            controlador.Error("El mensaje recibido está incompleto");
+                        }
                             break;
-                        case "NEW_USER":
+
+                    case "NEW_USER":
+                        if (json.ContainsKey("username")) {
                             controlador.Mensaje(json["username"] + " ha entrado al chat.");
-                            break;
-                        case "NEW_STATUS":
-                            controlador.Mensaje(json["username"] + " cambió su estado a " + json["status"]);
-                            break;
-                        case "PUBLIC_MESSAGE_FROM": 
+                        } else {
+                            controlador.Error("El mensaje recibido está incompleto");
+                        }
+                        break;
+
+                    case "NEW_STATUS":
+                        if (json.ContainsKey("username") && json.ContainsKey("status")) {
+                            foreach(String s in json.Keys)
+                            Console.WriteLine(s);
+                                controlador.Mensaje(json["username"] + " cambió su estado a " + json["status"]);
+                        } else {
+                            controlador.Error("El mensaje recibido está incompleto");
+                        }
+                        break;
+
+                    case "PUBLIC_MESSAGE_FROM": 
+                        if (json.ContainsKey("username") && json.ContainsKey("message")) {
                             mensaje = json["username"] + ": " + json["message"];
                             controlador.Mensaje(mensaje);
-                            break;
-                        case "INVITATION":
+                        } else {
+                            controlador.Error("El mensaje recibido está incompleto");
+                        }
+                        break;
+                        
+                    case "INVITATION":
+                        if (json.ContainsKey("message")) {
                             controlador.Mensaje(json["message"]);
-                            break;
-                        case "ROOM_MESSAGE_FROM":
+                        } else {
+                            controlador.Error("El mensaje recibido está incompleto");
+                        }
+                        break;
+
+                    case "ROOM_MESSAGE_FROM":
+                        if (json.ContainsKey("username") && json.ContainsKey("message") && json.ContainsKey("roomname")) {
                             mensaje = "[" + json["roomname"] + "] " + json["username"] + ": " + json["message"];
                             controlador.Mensaje(mensaje);
+                        } else {
+                            controlador.Error("El mensaje recibido está incompleto");
+                    }
+
                             break;
-                        case "WARNING":
-                            if (json.ContainsKey("operation") && (json["operation"] == "ROOM_MESSAGE" || json["operation"] == "MESSAGE")) {
-                                controlador.Error(json["message"]);
-                            }
-                            break;
-                        case "LEFT_ROOM":
+                    case "WARNING":
+                        if (json.ContainsKey("message") && json.ContainsKey("operation") && (json["operation"] == "ROOM_MESSAGE" || json["operation"] == "MESSAGE")) {
+                            controlador.Error(json["message"]);
+                        }
+                    break;
+
+                    case "LEFT_ROOM":
+                        if (json.ContainsKey("username") && json.ContainsKey("roomname")) {
                             mensaje = json["username"] + " ha abandonado el cuarto '" + json["roomname"] + "'";
                             controlador.Mensaje(mensaje);
-                            break;
-                        case "DISCONNECTED":
-                            controlador.Mensaje(json["username"] + " se desconectó del chat");
+                        } else {
+                            controlador.Error("El mensaje recibido está incompleto");
+                        }
                         break;
-                        case "ERROR":
+
+                    case "DISCONNECTED":
+                        if (json.ContainsKey("username")) {
+                            controlador.Mensaje(json["username"] + " se desconectó del chat");
+                        } else {
+                            controlador.Error("El mensaje recibido está incompleto");
+                        }
+                        break;
+
+                    case "ERROR":
+                        if (json.ContainsKey("message")) {
                             controlador.Error(json["message"]);
                             enchufe.Close();
                             Environment.Exit(0);
-                            break;
-                        case "JOINED_ROOM":
+                        }
+                        break;
+
+                    case "JOINED_ROOM":
+                        if (json.ContainsKey("username") && json.ContainsKey("roomname")) {
                             controlador.Mensaje(json["username"] + " se unió al cuarto '" + json["roomname"] + "'");
-                            break;
+                        } else {
+                            controlador.Error("El mensaje recibido está incompleto");
+                        }
+                        break;
+
                     }
         }
 
