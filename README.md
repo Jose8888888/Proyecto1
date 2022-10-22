@@ -75,3 +75,23 @@ Los mensajes que recibas se verán de la siguiente forma:
 	
 		[roomname] username: message
 		
+		
+
+Las clases que conforman los programas son las siguientes:
+	
+-Servidor: Recibe y maneja a los clientes.
+	
+-Cliente: Se conecta con el servidor.
+	
+-Usuario: Los usuarios que guarda el servidor cuando se conecta un cliente. Un usuario tiene nombre y estado. También tiene una lista de los cuartos en los que está y otra de los cuartos a los que está invitado.
+
+-Cuarto: Los cuartos a los que se pueden unir los usuarios. Un cuarto tiene nombre y una lista con los usuarios que están en él.
+
+-Vista: Conecta al controlador con la consola, recibiendo mensajes de uno y mandándoselos al otro.
+
+-ControladorVista: Conecta al cliente y al servidor con la vista, recibiendo mensajes de los primeros y mandándoselos a la vista.
+
+-ControladorCliente: Conecta a la vista con el cliente, recibiendo mensajes de la vista y mandándoselos al cliente.
+
+-Parser: Contiene métodos para convertir de cadena a bytes y viceversa.
+	
