@@ -6,7 +6,6 @@ public static class Parser
         //convierte una cadena en un arreglo de bytes para mandarlo por el enchufe
         public static byte[] CadenaABytes(String cadena) {
             byte[] bytes = Encoding.UTF8.GetBytes(cadena);
-            Array.Resize<byte>(ref bytes, 1024);
             return bytes;
         }
 

@@ -165,7 +165,7 @@ namespace Chat {
         private void Envia(Socket cliente, byte[] mensaje) {
             try {
                 lock(cliente)
-                    cliente.Send(mensaje, 1024, 0);
+                    cliente.Send(mensaje, mensaje.Length, 0);
             } catch(Exception) {
                 controlador.Error("Ocurrió un error con un cliente");
                 cliente.Close();

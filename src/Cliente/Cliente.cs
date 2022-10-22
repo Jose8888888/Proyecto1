@@ -75,9 +75,9 @@ namespace Chat {
                     enchufe.Close();
                     Environment.Exit(0);
                 }  
-                catch (SocketException)  
+                catch (SocketException se)  
                 {  
-                    controlador.Error("SocketException"); 
+                    controlador.Error("SocketException" + se); 
                     enchufe.Close();
                     Environment.Exit(0); 
                 }  
@@ -184,7 +184,7 @@ namespace Chat {
         //envía un mensaje al servidor por el enchufe
         private void Envia(byte[] mensaje) {
             try {
-                enchufe.Send(mensaje, 1024, 0);
+                enchufe.Send(mensaje, mensaje.Length, 0);
                 
                 
 
@@ -200,6 +200,7 @@ namespace Chat {
             byte[] bytes = new byte[1024];
             try {
                     enchufe.Receive(bytes, 1024, 0);
+                    Console.WriteLine(Parser.BytesACadena(bytes));
             } catch(SocketException se) {
                 controlador.Error("Ocurrió un error al conectarse con el servidor " + se);
                 enchufe.Close();
