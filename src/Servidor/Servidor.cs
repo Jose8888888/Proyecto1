@@ -177,8 +177,8 @@ namespace Chat {
             byte[] bytes = new byte[1024];
             try {
                 cliente.Receive(bytes, 1024, 0);
-            } catch(SocketException se) {
-                controlador.Error("Ocurrió un error con un cliente " + se);
+            } catch(SocketException) {
+                controlador.Error("Ocurrió un error con un cliente");
                 DesconectaUsuario(usuarios[cliente]);
             }
 
